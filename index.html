@@ -180,17 +180,31 @@
 
     /* Symbolic subgroups */
 
-    .subgroup + .subgroup { margin-top: 0.75rem; }
-
-    .subgroup-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #aaa;
-      font-weight: 600;
-      margin-bottom: 0.35rem;
-      padding-left: 2px;
+    details.subgroup {
+      margin-top: 0.4rem;
+      border: 1px solid #eef0fb;
+      border-radius: 6px;
+      overflow: hidden;
     }
+
+    details.subgroup > summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 0.45rem 0.75rem;
+      background: #f7f8ff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.84rem;
+      user-select: none;
+      justify-content: space-between;
+    }
+
+    details.subgroup > summary::-webkit-details-marker { display: none; }
+    details.subgroup[open] > summary { background: #eef0fb; }
+    details.subgroup[open] > summary .arrow { transform: rotate(90deg); }
+
+    .sg-list { padding: 0.4rem 0.5rem 0.5rem; }
 
     /* Expression list */
 
@@ -212,6 +226,20 @@
     }
 
     .hidden { display: none; }
+
+    .credits {
+      margin-top: 1.5rem;
+      font-size: 0.82rem;
+      color: #888;
+      line-height: 1.6;
+    }
+
+    .credits p + p { margin-top: 0.4rem; }
+    .credits strong { color: #666; }
+    .credits a { color: #888; }
+    .credits ul { padding-left: 1.25rem; margin: 0.4rem 0; }
+    .credits li { margin-bottom: 0.3rem; }
+    .credits code { font-size: 0.8rem; background: #f0f0f0; padding: 0.1rem 0.3rem; border-radius: 3px; }
 
     footer {
       margin-top: 2rem;
@@ -260,6 +288,48 @@
         <span class="results-meta" id="results-meta"></span>
       </div>
       <div id="results-body"></div>
+    </div>
+
+    <div class="credits">
+      <p>The solvers that I'm aware of online either don't group solutions, group them insufficiently
+         or only display a single representative of each idea.
+          This solver is built to show all solutions while highlighting the distinct ideas.</p>
+
+      <p><strong>How solutions are grouped</strong></p>
+      <p>
+        Many solutions are trivially equivalent - e.g., 3 + 4 + 8 + 9 is the same idea as 9 + 8 + 3 + 4.
+      </p>
+      <p>
+        This solver groups solutions at two levels, following the theory at
+        <a href="https://www.4nums.com/theory/" target="_blank">4nums.com</a>:
+      </p>
+      <ul>
+        <li><strong>By idea</strong> — expressions differ only by
+        commutativity, associativity, or multiplicative/additive identities (e.g. &times;1 or +0).
+        These are collapsed into one group.</li>
+        <li><strong>By subgroup</strong> — within each idea, expressions that are commutativity/associativity
+        variants of each other are grouped together.</li>
+      </ul>
+      <p>
+        So [3,4,8,9] has 144 raw expressions but only 4 distinct ideas: adding all four numbers,
+        (3+9)&times;8&divide;4, (9&minus;3)&times;(8&minus;4), and (3&times;4&minus;9)&times;8.
+      </p>
+      <p>
+        Different subgroups within the same idea differ only in their use of identity elements.
+        For example, <code>12&times;12+2&minus;2</code>, <code>12+12&times;2/2</code>, and <code>(12+12)&times;2/2</code>
+        all belong to different subgroups of the same idea.
+      </p>
+      <p><strong>References &amp; prior work</strong></p>
+      <p>
+        The grouping logic is based on the equivalence theory developed by
+        <a href="https://www.4nums.com/theory/" target="_blank">4nums.com</a>,
+        which also has a <a href="https://www.4nums.com/solutions/allsolvables/" target="_blank">complete table of all solvable quadruples</a>.
+        Mark Dominus wrote a series of posts on expression equivalence in the 24 puzzle
+        (<a href="https://blog.plover.com/math/24-puzzle.html" target="_blank">1</a>,
+        <a href="https://blog.plover.com/math/24-puzzle-2.html" target="_blank">2</a>,
+        <a href="https://blog.plover.com/math/17-puzzle.html" target="_blank">3</a>).
+        Shreevatsa has a related <a href="https://shreevatsa.wordpress.com/2016/07/20/a-simple-puzzle-with-a-foray-into-inequivalent-expressions/" target="_blank">writeup on inequivalent expressions</a>.
+      </p>
     </div>
 
     <footer>
@@ -676,25 +746,40 @@
 
         for (let i = 0; i < group.subgroups.length; i++) {
           const sg = group.subgroups[i];
-          const div = document.createElement('div');
-          div.className = 'subgroup';
 
-          if (group.subgroups.length > 1) {
-            const label = document.createElement('div');
-            label.className = 'subgroup-label';
-            label.textContent = `Subgroup ${i + 1} — ${sg.infixes.length} expression${sg.infixes.length === 1 ? '' : 's'}`;
-            div.appendChild(label);
-          }
+          if (group.subgroups.length === 1) {
+            // Single subgroup — list directly, no toggle needed
+            const ul = document.createElement('ul');
+            ul.className = 'expr-list';
+            for (const expr of sg.infixes) {
+              const li = document.createElement('li');
+              li.textContent = expr;
+              ul.appendChild(li);
+            }
+            ideaBody.appendChild(ul);
+          } else {
+            // Multiple subgroups — each gets its own collapsible
+            const sgDetails = document.createElement('details');
+            sgDetails.className = 'subgroup';
+            if (autoOpen) sgDetails.open = true;
 
-          const ul = document.createElement('ul');
-          ul.className = 'expr-list';
-          for (const expr of sg.infixes) {
-            const li = document.createElement('li');
-            li.textContent = expr;
-            ul.appendChild(li);
+            const sgSummary = document.createElement('summary');
+            sgSummary.innerHTML =
+              `<span style="display:flex;align-items:center;gap:0.5rem;min-width:0;overflow:hidden">` +
+              `<span class="arrow">▶</span><code style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sg.infixes[0]}</code></span>` +
+              `<span class="idea-count" style="flex-shrink:0">${sg.infixes.length} expression${sg.infixes.length === 1 ? '' : 's'}</span>`;
+            sgDetails.appendChild(sgSummary);
+
+            const ul = document.createElement('ul');
+            ul.className = 'expr-list sg-list';
+            for (const expr of sg.infixes) {
+              const li = document.createElement('li');
+              li.textContent = expr;
+              ul.appendChild(li);
+            }
+            sgDetails.appendChild(ul);
+            ideaBody.appendChild(sgDetails);
           }
-          div.appendChild(ul);
-          ideaBody.appendChild(div);
         }
 
         details.appendChild(ideaBody);
