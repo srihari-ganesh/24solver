@@ -21,7 +21,7 @@ const CASES = [
   { name: 'test7', numbers: [12, 12, 2, 2] },
 ];
 
-const DATA_DIR = '/Users/srihariganesh/Documents/solver24/tests/data';
+const DATA_DIR = path.join(__dirname, 'testdata');
 
 // ── Test file parser (mirrors conftest.py _parse_solution_file) ───────────
 //
@@ -155,7 +155,14 @@ let passed = 0, failed = 0;
 
 for (const { name, numbers } of CASES) {
   const filepath = path.join(DATA_DIR, `${name}.txt`);
-  const expectedTree = parseTestFile(filepath);
+  let expectedTree;
+  try {
+    expectedTree = parseTestFile(filepath);
+  } catch (e) {
+    console.log(`✗  ${name}  (${numbers.join(',')})  — could not read ${filepath}: ${e.message}`);
+    failed++;
+    continue;
+  }
   const actualTree   = groupedToTree(solveGrouped(numbers));
 
   const canonExpected = canonicalizeTree(expectedTree);

@@ -73,11 +73,7 @@
       border-radius: 8px;
       background: #fafafa;
       transition: border-color 0.15s;
-      -moz-appearance: textfield;
     }
-
-    .num-input::-webkit-inner-spin-button,
-    .num-input::-webkit-outer-spin-button { -webkit-appearance: none; }
 
     .num-input:focus { outline: none; border-color: #4a6cf7; background: #fff; }
     .num-input.invalid { border-color: #e05252; }
@@ -140,7 +136,7 @@
       padding: 0.65rem 0.9rem;
       background: #f0f2ff;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 0.5rem;
       user-select: none;
       font-size: 0.88rem;
@@ -158,22 +154,25 @@
     details.idea[open] > summary { background: #e8eaf6; }
     details.idea[open] > summary .arrow { transform: rotate(90deg); }
 
+    .summary-body {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+      gap: 0.15rem;
+    }
+
     details.idea > summary code {
       font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
       font-size: 0.85rem;
       color: #1a1a2e;
       font-weight: 600;
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      word-break: break-word;
     }
 
     details.idea > summary .idea-count {
       font-size: 0.75rem;
       color: #888;
-      white-space: nowrap;
-      flex-shrink: 0;
     }
 
     .idea-body { padding: 0.5rem 0.75rem 0.75rem; }
@@ -193,11 +192,10 @@
       padding: 0.45rem 0.75rem;
       background: #f7f8ff;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 0.5rem;
       font-size: 0.84rem;
       user-select: none;
-      justify-content: space-between;
     }
 
     details.subgroup > summary::-webkit-details-marker { display: none; }
@@ -224,6 +222,7 @@
       border-left: 3px solid #4a6cf7;
       color: #1a1a2e;
     }
+
 
     .hidden { display: none; }
 
@@ -264,19 +263,19 @@
       <div class="inputs-row">
         <div class="num-wrap">
           <label>1</label>
-          <input class="num-input" id="n1" type="number" placeholder="?" />
+          <input class="num-input" id="n1" type="text" inputmode="decimal" pattern="-?[0-9]*\.?[0-9]*" placeholder="?" />
         </div>
         <div class="num-wrap">
           <label>2</label>
-          <input class="num-input" id="n2" type="number" placeholder="?" />
+          <input class="num-input" id="n2" type="text" inputmode="decimal" pattern="-?[0-9]*\.?[0-9]*" placeholder="?" />
         </div>
         <div class="num-wrap">
           <label>3</label>
-          <input class="num-input" id="n3" type="number" placeholder="?" />
+          <input class="num-input" id="n3" type="text" inputmode="decimal" pattern="-?[0-9]*\.?[0-9]*" placeholder="?" />
         </div>
         <div class="num-wrap">
           <label>4</label>
-          <input class="num-input" id="n4" type="number" placeholder="?" />
+          <input class="num-input" id="n4" type="text" inputmode="decimal" pattern="-?[0-9]*\.?[0-9]*" placeholder="?" />
         </div>
       </div>
       <button class="btn-solve" id="btn-solve">Solve</button>
@@ -419,9 +418,15 @@
           const leftStr  = (left.op  !== null && PREC[left.op]  < p) ? `(${left.str})`  : left.str;
           const rightStr = (right.op !== null && ((t === '-' || t === '/') ? PREC[right.op] <= p : PREC[right.op] < p))
             ? `(${right.str})` : right.str;
-          stack.push({ str: `${leftStr} ${t} ${rightStr}`, op: t });
+          const opStr = t === '-' ? '−' : t;
+          stack.push({ str: `${leftStr} ${opStr} ${rightStr}`, op: t });
         } else {
-          stack.push({ str: t.d === 1 ? String(t.n) : `${t.n}/${t.d}`, op: null });
+          if (t.n < 0) {
+            const abs = t.d === 1 ? String(-t.n) : `${-t.n}/${t.d}`;
+            stack.push({ str: `(−${abs})`, op: null });
+          } else {
+            stack.push({ str: t.d === 1 ? String(t.n) : `${t.n}/${t.d}`, op: null });
+          }
         }
       }
       return stack[0].str;
@@ -670,7 +675,7 @@
     // Subgroup       = Part 2 equivalences (commut. + assoc. only)
 
     function solveGrouped(numbers) {
-      const nums = numbers.map(n => frac(n, 1));
+      const nums = numbers;
 
       // Collect unique solutions: infix string → token array
       const unique = new Map();
@@ -714,15 +719,56 @@
 
     // ── UI ─────────────────────────────────────────────────────────────────
 
+    // Parse a decimal string, integer, or fraction (x/y) into an exact fraction.
+    function parseInput(str) {
+      str = str.trim();
+      if (!str) return null;
+
+      // Fraction form: x/y
+      if (str.includes('/')) {
+        const parts = str.split('/');
+        if (parts.length !== 2) return null;
+        const num = parts[0].trim(), den = parts[1].trim();
+        if (!/^-?\d+$/.test(num) || !/^-?\d+$/.test(den)) return null;
+        const pn = parseInt(num, 10), pd = parseInt(den, 10);
+        if (Math.abs(pn) > 1e9 || Math.abs(pd) > 1e9) return null;
+        return frac(pn, pd);
+      }
+
+      // Decimal / integer form
+      if (str === '-' || str === '.') return null;
+      if (!/^-?\d*\.?\d*$/.test(str)) return null;
+      const neg = str.startsWith('-');
+      const abs = neg ? str.slice(1) : str;
+      if (!abs || abs === '.') return null;
+      const dotIdx = abs.indexOf('.');
+      if (dotIdx === -1) {
+        const n = parseInt(abs, 10);
+        if (isNaN(n) || n > 1e9) return null;
+        return frac(neg ? -n : n, 1);
+      }
+      const intPart = dotIdx === 0 ? 0 : parseInt(abs.slice(0, dotIdx), 10);
+      const decStr = abs.slice(dotIdx + 1);
+      if (decStr.length > 8) return null;
+      const d = Math.pow(10, decStr.length || 1);
+      const decVal = decStr ? parseInt(decStr, 10) : 0;
+      const n = intPart * d + decVal;
+      if (Math.abs(n) > 1e9) return null;
+      return frac(neg ? -n : n, d);
+    }
+
+    function fracToString(f) {
+      return f.d === 1 ? String(f.n) : `${f.n}/${f.d}`;
+    }
+
     function getInputs() {
       return ['n1', 'n2', 'n3', 'n4'].map(id => {
         const el = document.getElementById(id);
         el.classList.remove('invalid');
-        const v = el.value.trim();
-        if (v === '' || !Number.isInteger(Number(v))) {
-          el.classList.add('invalid'); return null;
-        }
-        return parseInt(v, 10);
+        const f = parseInput(el.value);
+        if (f === null) { el.classList.add('invalid'); return null; }
+        el.value = fracToString(f);
+        return f;
       });
     }
 
@@ -759,9 +805,18 @@
         const countLabel = group.total === 1
           ? '1 expression'
           : `${group.total} expressions · ${group.subgroups.length} subgroup${group.subgroups.length === 1 ? '' : 's'}`;
-        summary.innerHTML =
-          `<span class="arrow">▶</span><code>${firstExpr}</code>` +
-          `<span class="idea-count">${countLabel}</span>`;
+        const arrow = document.createElement('span');
+        arrow.className = 'arrow';
+        arrow.textContent = '▶';
+        const summaryBody = document.createElement('span');
+        summaryBody.className = 'summary-body';
+        const codeEl = document.createElement('code');
+        codeEl.textContent = firstExpr;
+        const ideaCount = document.createElement('span');
+        ideaCount.className = 'idea-count';
+        ideaCount.textContent = countLabel;
+        summaryBody.append(codeEl, ideaCount);
+        summary.append(arrow, summaryBody);
         details.appendChild(summary);
 
         const ideaBody = document.createElement('div');
@@ -787,10 +842,19 @@
             if (autoOpen) sgDetails.open = true;
 
             const sgSummary = document.createElement('summary');
-            sgSummary.innerHTML =
-              `<span style="display:flex;align-items:center;gap:0.5rem;min-width:0;overflow:hidden">` +
-              `<span class="arrow">▶</span><code style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sg.infixes[0]}</code></span>` +
-              `<span class="idea-count" style="flex-shrink:0">${sg.infixes.length} expression${sg.infixes.length === 1 ? '' : 's'}</span>`;
+            const sgArrow = document.createElement('span');
+            sgArrow.className = 'arrow';
+            sgArrow.textContent = '▶';
+            const sgBody = document.createElement('span');
+            sgBody.className = 'summary-body';
+            const sgCode = document.createElement('code');
+            sgCode.style.wordBreak = 'break-word';
+            sgCode.textContent = sg.infixes[0];
+            const sgCount = document.createElement('span');
+            sgCount.className = 'idea-count';
+            sgCount.textContent = `${sg.infixes.length} expression${sg.infixes.length === 1 ? '' : 's'}`;
+            sgBody.append(sgCode, sgCount);
+            sgSummary.append(sgArrow, sgBody);
             sgDetails.appendChild(sgSummary);
 
             const ul = document.createElement('ul');
