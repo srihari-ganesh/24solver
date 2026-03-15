@@ -4,104 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>General Solver</title>
+    <link rel="stylesheet" href="shared.css" />
     <style>
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: #f5f5f5;
-        color: #222;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 2rem 1rem;
-      }
-
-      .container {
-        width: 100%;
-        max-width: 600px;
-      }
-
-      h1 {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 0.25rem;
-        text-align: center;
-      }
-
-      .subtitle {
-        text-align: center;
-        color: #666;
-        font-size: 0.95rem;
-        margin-bottom: 2rem;
-      }
-
-      .card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 1.75rem;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-        margin-bottom: 1.5rem;
-      }
-
-      .inputs-label {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #555;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.75rem;
-      }
-
-      .inputs-row {
-        display: flex;
-        gap: 0.75rem;
-        margin-bottom: 1.25rem;
-      }
-
-      .num-wrap {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.35rem;
-      }
-
-      .num-wrap label {
-        font-size: 0.75rem;
-        color: #888;
-        font-weight: 500;
-      }
-
-      .num-input {
-        width: 100%;
-        padding: 0.6rem 0.5rem;
-        font-size: 1.4rem;
-        font-weight: 700;
-        text-align: center;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        background: #fafafa;
-        transition: border-color 0.15s;
-      }
-
-      .num-input:focus {
-        outline: none;
-        border-color: #4a6cf7;
-        background: #fff;
-      }
-      .num-input.invalid {
-        border-color: #e05252;
-      }
-
       /* Target + mode row */
 
       .options-row {
@@ -219,100 +123,6 @@
         color: #fff;
       }
 
-      .btn-solve {
-        width: 100%;
-        padding: 0.8rem;
-        font-size: 1rem;
-        font-weight: 600;
-        background: #4a6cf7;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition:
-          background 0.15s,
-          transform 0.1s;
-      }
-
-      .btn-solve:hover {
-        background: #3a5ce5;
-      }
-      .btn-solve:active {
-        transform: scale(0.98);
-      }
-
-      /* Results */
-
-      .results-card {
-        background: #fff;
-        border-radius: 12px;
-        padding: 1.75rem;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-      }
-
-      .results-header {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        margin-bottom: 1rem;
-      }
-
-      .results-title {
-        font-size: 1rem;
-        font-weight: 600;
-      }
-
-      .results-meta {
-        font-size: 0.82rem;
-        color: #888;
-      }
-
-      .no-solution {
-        text-align: center;
-        color: #888;
-        font-size: 0.95rem;
-        padding: 1rem 0;
-      }
-
-      /* Idea groups (identity level) */
-
-      details.idea {
-        margin-bottom: 0.5rem;
-        border: 1px solid #e8eaf6;
-        border-radius: 8px;
-        overflow: hidden;
-      }
-
-      details.idea > summary {
-        cursor: pointer;
-        list-style: none;
-        padding: 0.65rem 0.9rem;
-        background: #f0f2ff;
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
-        user-select: none;
-        font-size: 0.88rem;
-      }
-
-      details.idea > summary::-webkit-details-marker {
-        display: none;
-      }
-
-      details.idea > summary .arrow {
-        font-size: 0.6rem;
-        color: #4a6cf7;
-        transition: transform 0.15s;
-        flex-shrink: 0;
-      }
-
-      details.idea[open] > summary {
-        background: #e8eaf6;
-      }
-      details.idea[open] > summary .arrow {
-        transform: rotate(90deg);
-      }
-
       /* Exact hit highlighting in closest mode */
       details.idea.exact-hit > summary {
         background: #e6f4ea;
@@ -325,29 +135,6 @@
       }
       details.idea.exact-hit > summary .arrow {
         color: #2e7d4f;
-      }
-
-      .summary-body {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-width: 0;
-        gap: 0.15rem;
-      }
-
-      details.idea > summary code {
-        font-family:
-          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-        font-size: 0.85rem;
-        color: #1a1a2e;
-        font-weight: 600;
-        word-break: break-word;
-        min-width: 0;
-      }
-
-      details.idea > summary .idea-count {
-        font-size: 0.75rem;
-        color: #888;
       }
 
       .summary-top {
@@ -372,109 +159,10 @@
         color: #2e7d4f;
       }
 
-      .idea-body {
-        padding: 0.5rem 0.75rem 0.75rem;
-      }
-
-      /* Symbolic subgroups */
-
-      details.subgroup {
-        margin-top: 0.4rem;
-        border: 1px solid #eef0fb;
-        border-radius: 6px;
-        overflow: hidden;
-      }
-
-      details.subgroup > summary {
-        cursor: pointer;
-        list-style: none;
-        padding: 0.45rem 0.75rem;
-        background: #f7f8ff;
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
-        font-size: 0.84rem;
-        user-select: none;
-      }
-
-      details.subgroup > summary::-webkit-details-marker {
-        display: none;
-      }
-      details.subgroup[open] > summary {
-        background: #eef0fb;
-      }
-      details.subgroup[open] > summary .arrow {
-        transform: rotate(90deg);
-      }
-
-      .sg-list {
-        padding: 0.4rem 0.5rem 0.5rem;
-      }
-
-      /* Expression list */
-
-      .expr-list {
-        list-style: none;
-        display: flex;
-        flex-direction: column;
-        gap: 0.35rem;
-      }
-
-      .expr-list li {
-        font-family:
-          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-        font-size: 0.875rem;
-        padding: 0.4rem 0.65rem;
-        background: #f7f8ff;
-        border-radius: 5px;
-        border-left: 3px solid #4a6cf7;
-        color: #1a1a2e;
-      }
-
-      .hidden {
-        display: none;
-      }
-
-      footer {
-        margin-top: 2rem;
-        font-size: 0.8rem;
-        color: #aaa;
-        text-align: center;
-      }
-
-      footer a {
-        color: #aaa;
-      }
       footer nav {
         display: flex;
         justify-content: center;
         gap: 1.5rem;
-      }
-
-      .page-nav {
-        display: flex;
-        gap: 0.25rem;
-        margin-bottom: 1.5rem;
-      }
-      .page-nav a {
-        padding: 0.4rem 0.9rem;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #888;
-        text-decoration: none;
-        background: #ebebeb;
-        transition:
-          background 0.15s,
-          color 0.15s;
-      }
-      .page-nav a:hover {
-        background: #ddd;
-        color: #444;
-      }
-      .page-nav a.active {
-        background: #4a6cf7;
-        color: #fff;
       }
 
       .btn-show-more {
@@ -495,10 +183,6 @@
       }
 
       @media (max-width: 400px) {
-        .num-input {
-          font-size: 1.1rem;
-          padding: 0.5rem 0.25rem;
-        }
         .options-row {
           flex-wrap: wrap;
         }
@@ -512,7 +196,7 @@
     <div class="container">
       <nav class="page-nav">
         <a href="index.html">24 Solver</a>
-        <a href="solve.html" class="active">General Solver</a>
+        <a href="general-solver.html" class="active">General Solver</a>
       </nav>
       <h1>General Solver</h1>
       <p class="subtitle">

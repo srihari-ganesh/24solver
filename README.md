@@ -9,6 +9,7 @@ A web app that finds all arithmetic expressions using 4 integers that equal 24.
 Given 4 integers, the solver enumerates every valid [Reverse Polish Notation](https://en.wikipedia.org/wiki/Reverse_Polish_notation) expression using those numbers and the operators `+`, `-`, `*`, `/`. Arithmetic is done with exact rational fractions to avoid floating-point errors (e.g. `8 / (3 - 8/3) = 24` resolves correctly).
 
 **Algorithm:**
+
 1. Generate all combinations of 3 operators from `{+, -, *, /}` (4³ = 64 combos)
 2. For each combo, form a 7-token sequence (4 numbers + 3 operators)
 3. Enumerate all permutations of those 7 tokens (up to 5040)
@@ -19,12 +20,12 @@ Total work per query: ≤ 64 × 5040 = 322,560 evaluations — runs instantly in
 
 ## Classic test cases
 
-| Input | Result |
-|-------|--------|
-| `3 3 8 8` | `(8 / (3 - (8 / 3)))` (and others) |
-| `1 1 1 1` | No solution |
-| `4 4 4 4` | `(4 - 4 + 4) * 4` (and others) |
-| `1 1 11 11` | Addition-only solutions |
+| Input       | Result                             |
+| ----------- | ---------------------------------- |
+| `3 3 8 8`   | `(8 / (3 - (8 / 3)))` (and others) |
+| `1 1 1 1`   | No solution                        |
+| `4 4 4 4`   | `(4 - 4 + 4) * 4` (and others)     |
+| `1 1 11 11` | Addition-only solutions            |
 
 ## Deployment
 
