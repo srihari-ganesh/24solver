@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>General Solver</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f5f5f5;
+        color: #222;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem 1rem;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 600px;
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        text-align: center;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #666;
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.75rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+      }
+
+      .inputs-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.75rem;
+      }
+
+      .inputs-row {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .num-wrap {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
+      .num-wrap label {
+        font-size: 0.75rem;
+        color: #888;
+        font-weight: 500;
+      }
+
+      .num-input {
+        width: 100%;
+        padding: 0.6rem 0.5rem;
+        font-size: 1.4rem;
+        font-weight: 700;
+        text-align: center;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fafafa;
+        transition: border-color 0.15s;
+      }
+
+      .num-input:focus {
+        outline: none;
+        border-color: #4a6cf7;
+        background: #fff;
+      }
+      .num-input.invalid {
+        border-color: #e05252;
+      }
+
+      /* Target + mode row */
+
+      .options-row {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-end;
+        margin-bottom: 1.25rem;
+      }
+
+      .target-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .target-wrap label {
+        font-size: 0.75rem;
+        color: #888;
+        font-weight: 500;
+      }
+
+      .target-input {
+        padding: 0.6rem 0.75rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-align: center;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fafafa;
+        width: 120px;
+        transition: border-color 0.15s;
+      }
+
+      .target-input:focus {
+        outline: none;
+        border-color: #4a6cf7;
+        background: #fff;
+      }
+      .target-input.invalid {
+        border-color: #e05252;
+      }
+
+      .target-row {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      .btn-pi {
+        padding: 0.55rem 0.65rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fafafa;
+        color: #555;
+        cursor: pointer;
+        line-height: 1;
+        transition:
+          border-color 0.15s,
+          background 0.15s,
+          color 0.15s;
+      }
+
+      .btn-pi:hover {
+        border-color: #4a6cf7;
+        color: #4a6cf7;
+        background: #fff;
+      }
+      .btn-pi.active {
+        border-color: #4a6cf7;
+        background: #4a6cf7;
+        color: #fff;
+      }
+
+      .mode-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .mode-wrap label {
+        font-size: 0.75rem;
+        color: #888;
+        font-weight: 500;
+      }
+
+      .mode-toggle {
+        display: flex;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .mode-toggle button {
+        flex: 1;
+        padding: 0.55rem 1rem;
+        font-size: 0.88rem;
+        font-weight: 600;
+        border: none;
+        background: #fafafa;
+        color: #888;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+
+      .mode-toggle button + button {
+        border-left: 2px solid #e0e0e0;
+      }
+
+      .mode-toggle button.active {
+        background: #4a6cf7;
+        color: #fff;
+      }
+
+      .btn-solve {
+        width: 100%;
+        padding: 0.8rem;
+        font-size: 1rem;
+        font-weight: 600;
+        background: #4a6cf7;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+      }
+
+      .btn-solve:hover {
+        background: #3a5ce5;
+      }
+      .btn-solve:active {
+        transform: scale(0.98);
+      }
+
+      /* Results */
+
+      .results-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.75rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      .results-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+
+      .results-title {
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .results-meta {
+        font-size: 0.82rem;
+        color: #888;
+      }
+
+      .no-solution {
+        text-align: center;
+        color: #888;
+        font-size: 0.95rem;
+        padding: 1rem 0;
+      }
+
+      /* Idea groups (identity level) */
+
+      details.idea {
+        margin-bottom: 0.5rem;
+        border: 1px solid #e8eaf6;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      details.idea > summary {
+        cursor: pointer;
+        list-style: none;
+        padding: 0.65rem 0.9rem;
+        background: #f0f2ff;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        user-select: none;
+        font-size: 0.88rem;
+      }
+
+      details.idea > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      details.idea > summary .arrow {
+        font-size: 0.6rem;
+        color: #4a6cf7;
+        transition: transform 0.15s;
+        flex-shrink: 0;
+      }
+
+      details.idea[open] > summary {
+        background: #e8eaf6;
+      }
+      details.idea[open] > summary .arrow {
+        transform: rotate(90deg);
+      }
+
+      /* Exact hit highlighting in closest mode */
+      details.idea.exact-hit > summary {
+        background: #e6f4ea;
+      }
+      details.idea.exact-hit {
+        border-color: #b7dfc0;
+      }
+      details.idea.exact-hit[open] > summary {
+        background: #d4edda;
+      }
+      details.idea.exact-hit > summary .arrow {
+        color: #2e7d4f;
+      }
+
+      .summary-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-width: 0;
+        gap: 0.15rem;
+      }
+
+      details.idea > summary code {
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 0.85rem;
+        color: #1a1a2e;
+        font-weight: 600;
+        word-break: break-word;
+        min-width: 0;
+      }
+
+      details.idea > summary .idea-count {
+        font-size: 0.75rem;
+        color: #888;
+      }
+
+      .summary-top {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.75rem;
+        min-width: 0;
+      }
+
+      .value-delta {
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #4a6cf7;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .value-delta.exact {
+        color: #2e7d4f;
+      }
+
+      .idea-body {
+        padding: 0.5rem 0.75rem 0.75rem;
+      }
+
+      /* Symbolic subgroups */
+
+      details.subgroup {
+        margin-top: 0.4rem;
+        border: 1px solid #eef0fb;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      details.subgroup > summary {
+        cursor: pointer;
+        list-style: none;
+        padding: 0.45rem 0.75rem;
+        background: #f7f8ff;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        font-size: 0.84rem;
+        user-select: none;
+      }
+
+      details.subgroup > summary::-webkit-details-marker {
+        display: none;
+      }
+      details.subgroup[open] > summary {
+        background: #eef0fb;
+      }
+      details.subgroup[open] > summary .arrow {
+        transform: rotate(90deg);
+      }
+
+      .sg-list {
+        padding: 0.4rem 0.5rem 0.5rem;
+      }
+
+      /* Expression list */
+
+      .expr-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .expr-list li {
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 0.875rem;
+        padding: 0.4rem 0.65rem;
+        background: #f7f8ff;
+        border-radius: 5px;
+        border-left: 3px solid #4a6cf7;
+        color: #1a1a2e;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      footer {
+        margin-top: 2rem;
+        font-size: 0.8rem;
+        color: #aaa;
+        text-align: center;
+      }
+
+      footer a {
+        color: #aaa;
+      }
+      footer nav {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+      }
+
+      .page-nav {
+        display: flex;
+        gap: 0.25rem;
+        margin-bottom: 1.5rem;
+      }
+      .page-nav a {
+        padding: 0.4rem 0.9rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #888;
+        text-decoration: none;
+        background: #ebebeb;
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+      .page-nav a:hover {
+        background: #ddd;
+        color: #444;
+      }
+      .page-nav a.active {
+        background: #4a6cf7;
+        color: #fff;
+      }
+
+      .btn-show-more {
+        width: 100%;
+        margin-top: 0.5rem;
+        padding: 0.65rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        background: #f0f2ff;
+        color: #4a6cf7;
+        border: 1px solid #c5caf7;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .btn-show-more:hover {
+        background: #e4e8ff;
+      }
+
+      @media (max-width: 400px) {
+        .num-input {
+          font-size: 1.1rem;
+          padding: 0.5rem 0.25rem;
+        }
+        .options-row {
+          flex-wrap: wrap;
+        }
+        .target-input {
+          width: 100px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <nav class="page-nav">
+        <a href="index.html">24 Solver</a>
+        <a href="solve.html" class="active">General Solver</a>
+      </nav>
+      <h1>General Solver</h1>
+      <p class="subtitle">
+        Solve for any target, or find the closest approximation.
+      </p>
+
+      <div class="card">
+        <div class="inputs-label">Enter 4 numbers</div>
+        <div class="inputs-row">
+          <div class="num-wrap">
+            <label>1</label>
+            <input class="num-input" id="n1" type="text" placeholder="?" />
+          </div>
+          <div class="num-wrap">
+            <label>2</label>
+            <input class="num-input" id="n2" type="text" placeholder="?" />
+          </div>
+          <div class="num-wrap">
+            <label>3</label>
+            <input class="num-input" id="n3" type="text" placeholder="?" />
+          </div>
+          <div class="num-wrap">
+            <label>4</label>
+            <input class="num-input" id="n4" type="text" placeholder="?" />
+          </div>
+        </div>
+
+        <div class="options-row">
+          <div class="target-wrap">
+            <label for="target">Target</label>
+            <div class="target-row">
+              <input
+                class="target-input"
+                id="target"
+                type="text"
+                placeholder="24"
+              />
+              <button class="btn-pi" id="btn-pi" type="button" title="Use π">
+                π
+              </button>
+            </div>
+          </div>
+          <div class="mode-wrap">
+            <label>Mode</label>
+            <div class="mode-toggle">
+              <button id="btn-exact" class="active" type="button">Exact</button>
+              <button id="btn-closest" type="button">Closest</button>
+            </div>
+          </div>
+          <div class="mode-wrap">
+            <label>Numbers</label>
+            <div class="mode-toggle">
+              <button id="btn-all" class="active" type="button">All</button>
+              <button id="btn-any" type="button">Any subset</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-solve" id="btn-solve">Solve</button>
+      </div>
+
+      <div class="results-card hidden" id="results-section">
+        <div class="results-header">
+          <span class="results-title">Solutions</span>
+          <span class="results-meta" id="results-meta"></span>
+        </div>
+        <div id="results-body"></div>
+      </div>
+
+      <footer>
+        <a href="https://srihari-ganesh.github.io">srihari-ganesh.github.io</a>
+      </footer>
+    </div>
+
+    <script src="solver.js"></script>
+    <script>
+      // ── Mode toggle ─────────────────────────────────────────────────────────
+
+      let currentMode = "exact";
+      let currentNumMode = "all";
+
+      function setMode(mode) {
+        currentMode = mode;
+        document
+          .getElementById("btn-exact")
+          .classList.toggle("active", mode === "exact");
+        document
+          .getElementById("btn-closest")
+          .classList.toggle("active", mode === "closest");
+        if (
+          !document
+            .getElementById("results-section")
+            .classList.contains("hidden")
+        ) {
+          document.getElementById("btn-solve").click();
+        }
+      }
+
+      function setNumMode(numMode) {
+        currentNumMode = numMode;
+        document
+          .getElementById("btn-all")
+          .classList.toggle("active", numMode === "all");
+        document
+          .getElementById("btn-any")
+          .classList.toggle("active", numMode === "any");
+        if (
+          !document
+            .getElementById("results-section")
+            .classList.contains("hidden")
+        ) {
+          document.getElementById("btn-solve").click();
+        }
+      }
+
+      document
+        .getElementById("btn-exact")
+        .addEventListener("click", () => setMode("exact"));
+      document
+        .getElementById("btn-closest")
+        .addEventListener("click", () => setMode("closest"));
+      document
+        .getElementById("btn-all")
+        .addEventListener("click", () => setNumMode("all"));
+      document
+        .getElementById("btn-any")
+        .addEventListener("click", () => setNumMode("any"));
+
+      // ── Input helpers ───────────────────────────────────────────────────────
+
+      function getNumberInputs() {
+        return ["n1", "n2", "n3", "n4"].map((id) => {
+          const el = document.getElementById(id);
+          el.classList.remove("invalid");
+          const f = parseInput(el.value);
+          if (f === null) {
+            el.classList.add("invalid");
+            return null;
+          }
+          el.value = fracToString(f);
+          return f;
+        });
+      }
+
+      function getTargetInput() {
+        const el = document.getElementById("target");
+        el.classList.remove("invalid");
+        if (!el.value.trim()) {
+          el.value = "24";
+          return { n: 24, d: 1 };
+        }
+        const f = parseInput(el.value);
+        if (f === null) {
+          el.classList.add("invalid");
+          return null;
+        }
+        el.value = fracToString(f);
+        return f;
+      }
+
+      // ── Value display helpers ───────────────────────────────────────────────
+
+      function valueLabel(val) {
+        if (val.d === 1) return `= ${val.n}`;
+        const flt = val.n / val.d;
+        return `${val.n}/${val.d} ≈ ${flt.toPrecision(5)}`;
+      }
+
+      function formatDelta(diff) {
+        const sign = diff > 0 ? "+" : "−";
+        const abs = Math.abs(diff);
+        let str;
+        if (abs < 0.001) {
+          str = abs.toExponential(2).replace(/\.?0+e/, "e");
+        } else {
+          str = abs
+            .toFixed(4)
+            .replace(/\.?0+$/, "")
+            .replace(/\.$/, "");
+        }
+        return `${sign}${str}`;
+      }
+
+      function targetDisplayStr(targetFrac) {
+        if (targetFrac.d === 1) return String(targetFrac.n);
+        const flt = targetFrac.n / targetFrac.d;
+        return flt.toPrecision(6).replace(/\.?0+$/, "");
+      }
+
+      // ── Rendering ───────────────────────────────────────────────────────────
+
+      function renderResults(groups, targetFrac, mode) {
+        const section = document.getElementById("results-section");
+        const meta = document.getElementById("results-meta");
+        const body = document.getElementById("results-body");
+
+        section.classList.remove("hidden");
+        body.innerHTML = "";
+
+        const total = groups.reduce((s, g) => s + g.total, 0);
+        const nIdeas = groups.length;
+        const targetStr = targetDisplayStr(targetFrac);
+
+        if (mode === "exact") {
+          if (total === 0) {
+            meta.textContent = "";
+            body.innerHTML = `<p class="no-solution">No exact solution for target ${targetStr}.</p>`;
+            return;
+          }
+          meta.textContent = `${total} expression${total === 1 ? "" : "s"} · ${nIdeas} distinct idea${nIdeas === 1 ? "" : "s"}`;
+        } else {
+          if (total === 0) {
+            meta.textContent = "";
+            body.innerHTML = `<p class="no-solution">No expressions possible for these numbers.</p>`;
+            return;
+          }
+          meta.textContent = `Showing all ${total} expression${total === 1 ? "" : "s"} across ${nIdeas} idea${nIdeas === 1 ? "" : "s"}, sorted by distance from ${targetStr}`;
+        }
+
+        const autoOpen = total <= 30;
+        const targetFlt = targetFrac.n / targetFrac.d;
+
+        const INITIAL_SHOW = 10;
+
+        function renderGroup(group) {
+          const firstExpr = group.subgroups[0].infixes[0];
+          const details = document.createElement("details");
+          details.className = "idea";
+          if (autoOpen) details.open = true;
+
+          if (mode === "closest" && group.distance === 0) {
+            details.classList.add("exact-hit");
+          }
+
+          const summary = document.createElement("summary");
+          const arrow = document.createElement("span");
+          arrow.className = "arrow";
+          arrow.textContent = "▶";
+
+          const summaryBody = document.createElement("span");
+          summaryBody.className = "summary-body";
+
+          const codeEl = document.createElement("code");
+          codeEl.textContent = firstExpr;
+
+          const ideaCount = document.createElement("span");
+          ideaCount.className = "idea-count";
+
+          if (mode === "closest") {
+            const diff = group.valueFlt - targetFlt;
+            const isExact = group.distance === 0;
+
+            const valueDelta = document.createElement("span");
+            valueDelta.className = "value-delta" + (isExact ? " exact" : "");
+            valueDelta.textContent = isExact
+              ? `= ${fracToString(group.value)} (exact)`
+              : `= ${fracToString(group.value)} (Δ ${formatDelta(diff)})`;
+
+            const countPart =
+              group.total === 1
+                ? "1 expression"
+                : `${group.total} expressions · ${group.subgroups.length} subgroup${group.subgroups.length === 1 ? "" : "s"}`;
+            ideaCount.textContent = countPart;
+
+            const topRow = document.createElement("div");
+            topRow.className = "summary-top";
+            topRow.append(codeEl, valueDelta);
+            summaryBody.append(topRow, ideaCount);
+          } else {
+            const countLabel =
+              group.total === 1
+                ? "1 expression"
+                : `${group.total} expressions · ${group.subgroups.length} subgroup${group.subgroups.length === 1 ? "" : "s"}`;
+            ideaCount.textContent = countLabel;
+            summaryBody.append(codeEl, ideaCount);
+          }
+
+          summary.append(arrow, summaryBody);
+          details.appendChild(summary);
+
+          const ideaBody = document.createElement("div");
+          ideaBody.className = "idea-body";
+
+          for (const sg of group.subgroups) {
+            if (group.subgroups.length === 1) {
+              const ul = document.createElement("ul");
+              ul.className = "expr-list";
+              for (const expr of sg.infixes) {
+                const li = document.createElement("li");
+                li.textContent = expr;
+                ul.appendChild(li);
+              }
+              ideaBody.appendChild(ul);
+            } else {
+              const sgDetails = document.createElement("details");
+              sgDetails.className = "subgroup";
+              if (autoOpen) sgDetails.open = true;
+
+              const sgSummary = document.createElement("summary");
+              const sgArrow = document.createElement("span");
+              sgArrow.className = "arrow";
+              sgArrow.textContent = "▶";
+              const sgBody = document.createElement("span");
+              sgBody.className = "summary-body";
+              const sgCode = document.createElement("code");
+              sgCode.style.wordBreak = "break-word";
+              sgCode.textContent = sg.infixes[0];
+              const sgCount = document.createElement("span");
+              sgCount.className = "idea-count";
+              sgCount.textContent = `${sg.infixes.length} expression${sg.infixes.length === 1 ? "" : "s"}`;
+              sgBody.append(sgCode, sgCount);
+              sgSummary.append(sgArrow, sgBody);
+              sgDetails.appendChild(sgSummary);
+
+              const ul = document.createElement("ul");
+              ul.className = "expr-list sg-list";
+              for (const expr of sg.infixes) {
+                const li = document.createElement("li");
+                li.textContent = expr;
+                ul.appendChild(li);
+              }
+              sgDetails.appendChild(ul);
+              ideaBody.appendChild(sgDetails);
+            }
+          }
+
+          details.appendChild(ideaBody);
+          body.appendChild(details);
+        }
+
+        if (mode === "closest" && groups.length > INITIAL_SHOW) {
+          const visible = groups.slice(0, INITIAL_SHOW);
+          const hidden = groups.slice(INITIAL_SHOW);
+          visible.forEach(renderGroup);
+
+          const btn = document.createElement("button");
+          btn.className = "btn-show-more";
+          btn.textContent = `Show ${hidden.length} more ideas`;
+          btn.addEventListener("click", () => {
+            btn.remove();
+            hidden.forEach(renderGroup);
+          });
+          body.appendChild(btn);
+        } else {
+          groups.forEach(renderGroup);
+        }
+      }
+
+      // ── Solve button ────────────────────────────────────────────────────────
+
+      document.getElementById("btn-solve").addEventListener("click", () => {
+        const vals = getNumberInputs();
+        if (vals.some((v) => v === null)) return;
+        const targetFrac = getTargetInput();
+        if (!targetFrac) return;
+        const groups = solveGrouped(
+          vals,
+          targetFrac,
+          currentMode,
+          currentNumMode,
+        );
+        renderResults(groups, targetFrac, currentMode);
+      });
+
+      const PI_STR = "3.14159265";
+
+      document.getElementById("btn-pi").addEventListener("click", () => {
+        const el = document.getElementById("target");
+        const btn = document.getElementById("btn-pi");
+        if (btn.classList.contains("active")) {
+          el.value = "";
+          btn.classList.remove("active");
+        } else {
+          el.value = PI_STR;
+          btn.classList.add("active");
+        }
+      });
+
+      document.getElementById("target").addEventListener("input", () => {
+        document.getElementById("btn-pi").classList.remove("active");
+      });
+
+      document
+        .querySelectorAll(".num-input, .target-input")
+        .forEach((input) => {
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") document.getElementById("btn-solve").click();
+          });
+        });
+    </script>
+  </body>
+</html>

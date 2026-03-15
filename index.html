@@ -1,890 +1,631 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>24 Solver</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>24 Solver</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f5f5f5;
-      color: #222;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem 1rem;
-    }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f5f5f5;
+        color: #222;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem 1rem;
+      }
 
-    .container { width: 100%; max-width: 600px; }
+      .container {
+        width: 100%;
+        max-width: 600px;
+      }
 
-    h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      margin-bottom: 0.25rem;
-      text-align: center;
-    }
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        text-align: center;
+      }
 
-    .subtitle {
-      text-align: center;
-      color: #666;
-      font-size: 0.95rem;
-      margin-bottom: 2rem;
-    }
+      .subtitle {
+        text-align: center;
+        color: #666;
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+      }
 
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 1.75rem;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      margin-bottom: 1.5rem;
-    }
+      .card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.75rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+      }
 
-    .inputs-label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #555;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.75rem;
-    }
+      .inputs-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.75rem;
+      }
 
-    .inputs-row { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; }
+      .inputs-row {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+      }
 
-    .num-wrap {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.35rem;
-    }
+      .num-wrap {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+      }
 
-    .num-wrap label { font-size: 0.75rem; color: #888; font-weight: 500; }
+      .num-wrap label {
+        font-size: 0.75rem;
+        color: #888;
+        font-weight: 500;
+      }
 
-    .num-input {
-      width: 100%;
-      padding: 0.6rem 0.5rem;
-      font-size: 1.4rem;
-      font-weight: 700;
-      text-align: center;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      background: #fafafa;
-      transition: border-color 0.15s;
-    }
+      .num-input {
+        width: 100%;
+        padding: 0.6rem 0.5rem;
+        font-size: 1.4rem;
+        font-weight: 700;
+        text-align: center;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fafafa;
+        transition: border-color 0.15s;
+      }
 
-    .num-input:focus { outline: none; border-color: #4a6cf7; background: #fff; }
-    .num-input.invalid { border-color: #e05252; }
+      .num-input:focus {
+        outline: none;
+        border-color: #4a6cf7;
+        background: #fff;
+      }
+      .num-input.invalid {
+        border-color: #e05252;
+      }
 
-    .btn-solve {
-      width: 100%;
-      padding: 0.8rem;
-      font-size: 1rem;
-      font-weight: 600;
-      background: #4a6cf7;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-    }
+      .btn-solve {
+        width: 100%;
+        padding: 0.8rem;
+        font-size: 1rem;
+        font-weight: 600;
+        background: #4a6cf7;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+      }
 
-    .btn-solve:hover { background: #3a5ce5; }
-    .btn-solve:active { transform: scale(0.98); }
+      .btn-solve:hover {
+        background: #3a5ce5;
+      }
+      .btn-solve:active {
+        transform: scale(0.98);
+      }
 
-    /* Results */
+      /* Results */
 
-    .results-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 1.75rem;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    }
+      .results-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.75rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      }
 
-    .results-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-    }
+      .results-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
 
-    .results-title { font-size: 1rem; font-weight: 600; }
+      .results-title {
+        font-size: 1rem;
+        font-weight: 600;
+      }
 
-    .results-meta { font-size: 0.82rem; color: #888; }
+      .results-meta {
+        font-size: 0.82rem;
+        color: #888;
+      }
 
-    .no-solution {
-      text-align: center;
-      color: #888;
-      font-size: 0.95rem;
-      padding: 1rem 0;
-    }
+      .no-solution {
+        text-align: center;
+        color: #888;
+        font-size: 0.95rem;
+        padding: 1rem 0;
+      }
 
-    /* Idea groups (identity level) */
+      /* Idea groups (identity level) */
 
-    details.idea {
-      margin-bottom: 0.5rem;
-      border: 1px solid #e8eaf6;
-      border-radius: 8px;
-      overflow: hidden;
-    }
+      details.idea {
+        margin-bottom: 0.5rem;
+        border: 1px solid #e8eaf6;
+        border-radius: 8px;
+        overflow: hidden;
+      }
 
-    details.idea > summary {
-      cursor: pointer;
-      list-style: none;
-      padding: 0.65rem 0.9rem;
-      background: #f0f2ff;
-      display: flex;
-      align-items: flex-start;
-      gap: 0.5rem;
-      user-select: none;
-      font-size: 0.88rem;
-    }
+      details.idea > summary {
+        cursor: pointer;
+        list-style: none;
+        padding: 0.65rem 0.9rem;
+        background: #f0f2ff;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        user-select: none;
+        font-size: 0.88rem;
+      }
 
-    details.idea > summary::-webkit-details-marker { display: none; }
+      details.idea > summary::-webkit-details-marker {
+        display: none;
+      }
 
-    details.idea > summary .arrow {
-      font-size: 0.6rem;
-      color: #4a6cf7;
-      transition: transform 0.15s;
-      flex-shrink: 0;
-    }
+      details.idea > summary .arrow {
+        font-size: 0.6rem;
+        color: #4a6cf7;
+        transition: transform 0.15s;
+        flex-shrink: 0;
+      }
 
-    details.idea[open] > summary { background: #e8eaf6; }
-    details.idea[open] > summary .arrow { transform: rotate(90deg); }
+      details.idea[open] > summary {
+        background: #e8eaf6;
+      }
+      details.idea[open] > summary .arrow {
+        transform: rotate(90deg);
+      }
 
-    .summary-body {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      min-width: 0;
-      gap: 0.15rem;
-    }
+      .summary-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-width: 0;
+        gap: 0.15rem;
+      }
 
-    details.idea > summary code {
-      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-      font-size: 0.85rem;
-      color: #1a1a2e;
-      font-weight: 600;
-      word-break: break-word;
-    }
+      details.idea > summary code {
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 0.85rem;
+        color: #1a1a2e;
+        font-weight: 600;
+        word-break: break-word;
+      }
 
-    details.idea > summary .idea-count {
-      font-size: 0.75rem;
-      color: #888;
-    }
+      details.idea > summary .idea-count {
+        font-size: 0.75rem;
+        color: #888;
+      }
 
-    .idea-body { padding: 0.5rem 0.75rem 0.75rem; }
+      .idea-body {
+        padding: 0.5rem 0.75rem 0.75rem;
+      }
 
-    /* Symbolic subgroups */
+      /* Symbolic subgroups */
 
-    details.subgroup {
-      margin-top: 0.4rem;
-      border: 1px solid #eef0fb;
-      border-radius: 6px;
-      overflow: hidden;
-    }
+      details.subgroup {
+        margin-top: 0.4rem;
+        border: 1px solid #eef0fb;
+        border-radius: 6px;
+        overflow: hidden;
+      }
 
-    details.subgroup > summary {
-      cursor: pointer;
-      list-style: none;
-      padding: 0.45rem 0.75rem;
-      background: #f7f8ff;
-      display: flex;
-      align-items: flex-start;
-      gap: 0.5rem;
-      font-size: 0.84rem;
-      user-select: none;
-    }
+      details.subgroup > summary {
+        cursor: pointer;
+        list-style: none;
+        padding: 0.45rem 0.75rem;
+        background: #f7f8ff;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        font-size: 0.84rem;
+        user-select: none;
+      }
 
-    details.subgroup > summary::-webkit-details-marker { display: none; }
-    details.subgroup[open] > summary { background: #eef0fb; }
-    details.subgroup[open] > summary .arrow { transform: rotate(90deg); }
+      details.subgroup > summary::-webkit-details-marker {
+        display: none;
+      }
+      details.subgroup[open] > summary {
+        background: #eef0fb;
+      }
+      details.subgroup[open] > summary .arrow {
+        transform: rotate(90deg);
+      }
 
-    .sg-list { padding: 0.4rem 0.5rem 0.5rem; }
+      .sg-list {
+        padding: 0.4rem 0.5rem 0.5rem;
+      }
 
-    /* Expression list */
+      /* Expression list */
 
-    .expr-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
+      .expr-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
 
-    .expr-list li {
-      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-      font-size: 0.875rem;
-      padding: 0.4rem 0.65rem;
-      background: #f7f8ff;
-      border-radius: 5px;
-      border-left: 3px solid #4a6cf7;
-      color: #1a1a2e;
-    }
+      .expr-list li {
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 0.875rem;
+        padding: 0.4rem 0.65rem;
+        background: #f7f8ff;
+        border-radius: 5px;
+        border-left: 3px solid #4a6cf7;
+        color: #1a1a2e;
+      }
 
+      .hidden {
+        display: none;
+      }
 
-    .hidden { display: none; }
+      .credits {
+        margin-top: 1.5rem;
+        font-size: 0.82rem;
+        color: #888;
+        line-height: 1.6;
+      }
 
-    .credits {
-      margin-top: 1.5rem;
-      font-size: 0.82rem;
-      color: #888;
-      line-height: 1.6;
-    }
+      .credits p + p {
+        margin-top: 0.4rem;
+      }
+      .credits strong {
+        color: #666;
+      }
+      .credits a {
+        color: #888;
+      }
+      .credits ul {
+        padding-left: 1.25rem;
+        margin: 0.4rem 0;
+      }
+      .credits li {
+        margin-bottom: 0.3rem;
+      }
+      .credits code {
+        font-size: 0.8rem;
+        background: #f0f0f0;
+        padding: 0.1rem 0.3rem;
+        border-radius: 3px;
+      }
 
-    .credits p + p { margin-top: 0.4rem; }
-    .credits strong { color: #666; }
-    .credits a { color: #888; }
-    .credits ul { padding-left: 1.25rem; margin: 0.4rem 0; }
-    .credits li { margin-bottom: 0.3rem; }
-    .credits code { font-size: 0.8rem; background: #f0f0f0; padding: 0.1rem 0.3rem; border-radius: 3px; }
+      footer {
+        margin-top: 2rem;
+        font-size: 0.8rem;
+        color: #aaa;
+        text-align: center;
+      }
 
-    footer {
-      margin-top: 2rem;
-      font-size: 0.8rem;
-      color: #aaa;
-      text-align: center;
-    }
+      footer a {
+        color: #aaa;
+      }
 
-    footer a { color: #aaa; }
+      .page-nav {
+        display: flex;
+        gap: 0.25rem;
+        margin-bottom: 1.5rem;
+      }
+      .page-nav a {
+        padding: 0.4rem 0.9rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #888;
+        text-decoration: none;
+        background: #ebebeb;
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+      .page-nav a:hover {
+        background: #ddd;
+        color: #444;
+      }
+      .page-nav a.active {
+        background: #4a6cf7;
+        color: #fff;
+      }
 
-    @media (max-width: 400px) {
-      .num-input { font-size: 1.1rem; padding: 0.5rem 0.25rem; }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>24 Solver</h1>
+      @media (max-width: 400px) {
+        .num-input {
+          font-size: 1.1rem;
+          padding: 0.5rem 0.25rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <nav class="page-nav">
+        <a href="index.html" class="active">24 Solver</a>
+        <a href="solve.html">General Solver</a>
+      </nav>
+      <h1>24 Solver</h1>
 
-    <div class="card">
-      <div class="inputs-label">Enter 4 numbers</div>
-      <div class="inputs-row">
-        <div class="num-wrap">
-          <label>1</label>
-          <input class="num-input" id="n1" type="text" pattern="-?[0-9]*\.?[0-9]*" placeholder="?" />
+      <div class="card">
+        <div class="inputs-label">Enter 4 numbers</div>
+        <div class="inputs-row">
+          <div class="num-wrap">
+            <label>1</label>
+            <input
+              class="num-input"
+              id="n1"
+              type="text"
+              pattern="-?[0-9]*\.?[0-9]*"
+              placeholder="?"
+            />
+          </div>
+          <div class="num-wrap">
+            <label>2</label>
+            <input
+              class="num-input"
+              id="n2"
+              type="text"
+              pattern="-?[0-9]*\.?[0-9]*"
+              placeholder="?"
+            />
+          </div>
+          <div class="num-wrap">
+            <label>3</label>
+            <input
+              class="num-input"
+              id="n3"
+              type="text"
+              pattern="-?[0-9]*\.?[0-9]*"
+              placeholder="?"
+            />
+          </div>
+          <div class="num-wrap">
+            <label>4</label>
+            <input
+              class="num-input"
+              id="n4"
+              type="text"
+              pattern="-?[0-9]*\.?[0-9]*"
+              placeholder="?"
+            />
+          </div>
         </div>
-        <div class="num-wrap">
-          <label>2</label>
-          <input class="num-input" id="n2" type="text" pattern="-?[0-9]*\.?[0-9]*" placeholder="?" />
-        </div>
-        <div class="num-wrap">
-          <label>3</label>
-          <input class="num-input" id="n3" type="text" pattern="-?[0-9]*\.?[0-9]*" placeholder="?" />
-        </div>
-        <div class="num-wrap">
-          <label>4</label>
-          <input class="num-input" id="n4" type="text" pattern="-?[0-9]*\.?[0-9]*" placeholder="?" />
-        </div>
+        <button class="btn-solve" id="btn-solve">Solve</button>
       </div>
-      <button class="btn-solve" id="btn-solve">Solve</button>
-    </div>
 
-    <div class="results-card hidden" id="results-section">
-      <div class="results-header">
-        <span class="results-title">Solutions</span>
-        <span class="results-meta" id="results-meta"></span>
+      <div class="results-card hidden" id="results-section">
+        <div class="results-header">
+          <span class="results-title">Solutions</span>
+          <span class="results-meta" id="results-meta"></span>
+        </div>
+        <div id="results-body"></div>
       </div>
-      <div id="results-body"></div>
+
+      <div class="credits">
+        <p>
+          The solvers that I'm aware of online either (a) don't group solutions,
+          (b) group them insufficiently or (c) only display a single
+          representative of each idea. This solver is built to show all
+          solutions while highlighting the distinct ideas.
+          <strong
+            >For a more flexible form of this solver, check out the
+            <a href="solve.html">general solver</a>.</strong
+          >
+        </p>
+
+        <p><strong>How solutions are grouped</strong></p>
+        <p>
+          Many solutions are trivially equivalent - e.g., 3 + 4 + 8 + 9 is the
+          same idea as 9 + 8 + 3 + 4.
+        </p>
+        <p>
+          This solver groups solutions at two levels, following the theory at
+          <a href="https://www.4nums.com/theory/" target="_blank">4nums.com</a>:
+        </p>
+        <ul>
+          <li>
+            <strong>By idea</strong> — expressions differ only by commutativity,
+            associativity, or multiplicative/additive identities (e.g. &times;1
+            or +0). These are collapsed into one group.
+          </li>
+          <li>
+            <strong>By subgroup</strong> — within each idea, expressions that
+            are commutativity/associativity variants of each other are grouped
+            together.
+          </li>
+        </ul>
+        <p>
+          So [3,4,8,9] has 144 raw expressions but only 4 distinct ideas: adding
+          all four numbers, (3+9)&times;8&divide;4,
+          (9&minus;3)&times;(8&minus;4), and (3&times;4&minus;9)&times;8.
+        </p>
+        <p>
+          Different subgroups within the same idea differ only in their use of
+          identity elements. For example, <code>12&times;12+2&minus;2</code>,
+          <code>12+12&times;2/2</code>, and <code>(12+12)&times;2/2</code>
+          all belong to different subgroups of the same idea.
+        </p>
+        <p><strong>References &amp; prior work</strong></p>
+        <p>
+          The grouping logic is based on the equivalence theory developed by
+          <a href="https://www.4nums.com/theory/" target="_blank">4nums.com</a>,
+          which also has a
+          <a
+            href="https://www.4nums.com/solutions/allsolvables/"
+            target="_blank"
+            >complete table of all solvable quadruples</a
+          >. Mark Dominus wrote a series of posts on expression equivalence in
+          the 24 puzzle (<a
+            href="https://blog.plover.com/math/24-puzzle.html"
+            target="_blank"
+            >1</a
+          >,
+          <a
+            href="https://blog.plover.com/math/24-puzzle-2.html"
+            target="_blank"
+            >2</a
+          >,
+          <a href="https://blog.plover.com/math/17-puzzle.html" target="_blank"
+            >3</a
+          >). Shreevatsa has a related
+          <a
+            href="https://shreevatsa.wordpress.com/2016/07/20/a-simple-puzzle-with-a-foray-into-inequivalent-expressions/"
+            target="_blank"
+            >writeup on inequivalent expressions</a
+          >.
+        </p>
+      </div>
+
+      <footer>
+        <a href="https://srihari-ganesh.github.io">srihari-ganesh.github.io</a>
+      </footer>
     </div>
 
-    <div class="credits">
-      <p>The solvers that I'm aware of online either don't group solutions, group them insufficiently
-         or only display a single representative of each idea.
-          This solver is built to show all solutions while highlighting the distinct ideas.</p>
-
-      <p><strong>How solutions are grouped</strong></p>
-      <p>
-        Many solutions are trivially equivalent - e.g., 3 + 4 + 8 + 9 is the same idea as 9 + 8 + 3 + 4.
-      </p>
-      <p>
-        This solver groups solutions at two levels, following the theory at
-        <a href="https://www.4nums.com/theory/" target="_blank">4nums.com</a>:
-      </p>
-      <ul>
-        <li><strong>By idea</strong> — expressions differ only by
-        commutativity, associativity, or multiplicative/additive identities (e.g. &times;1 or +0).
-        These are collapsed into one group.</li>
-        <li><strong>By subgroup</strong> — within each idea, expressions that are commutativity/associativity
-        variants of each other are grouped together.</li>
-      </ul>
-      <p>
-        So [3,4,8,9] has 144 raw expressions but only 4 distinct ideas: adding all four numbers,
-        (3+9)&times;8&divide;4, (9&minus;3)&times;(8&minus;4), and (3&times;4&minus;9)&times;8.
-      </p>
-      <p>
-        Different subgroups within the same idea differ only in their use of identity elements.
-        For example, <code>12&times;12+2&minus;2</code>, <code>12+12&times;2/2</code>, and <code>(12+12)&times;2/2</code>
-        all belong to different subgroups of the same idea.
-      </p>
-      <p><strong>References &amp; prior work</strong></p>
-      <p>
-        The grouping logic is based on the equivalence theory developed by
-        <a href="https://www.4nums.com/theory/" target="_blank">4nums.com</a>,
-        which also has a <a href="https://www.4nums.com/solutions/allsolvables/" target="_blank">complete table of all solvable quadruples</a>.
-        Mark Dominus wrote a series of posts on expression equivalence in the 24 puzzle
-        (<a href="https://blog.plover.com/math/24-puzzle.html" target="_blank">1</a>,
-        <a href="https://blog.plover.com/math/24-puzzle-2.html" target="_blank">2</a>,
-        <a href="https://blog.plover.com/math/17-puzzle.html" target="_blank">3</a>).
-        Shreevatsa has a related <a href="https://shreevatsa.wordpress.com/2016/07/20/a-simple-puzzle-with-a-foray-into-inequivalent-expressions/" target="_blank">writeup on inequivalent expressions</a>.
-      </p>
-    </div>
-
-    <footer>
-      <a href="https://srihari-ganesh.github.io">srihari-ganesh.github.io</a>
-    </footer>
-  </div>
-
-  <script>
-    // ── Rational arithmetic ────────────────────────────────────────────────
-
-    function gcd(a, b) {
-      a = Math.abs(a); b = Math.abs(b);
-      while (b) { const t = b; b = a % b; a = t; }
-      return a || 1;
-    }
-
-    function frac(n, d) {
-      if (d === 0) return null;
-      if (d < 0) { n = -n; d = -d; }
-      const g = gcd(Math.abs(n), d);
-      return { n: n / g, d: d / g };
-    }
-
-    function applyOp(op, a, b) {
-      switch (op) {
-        case '+': return frac(a.n * b.d + b.n * a.d, a.d * b.d);
-        case '-': return frac(a.n * b.d - b.n * a.d, a.d * b.d);
-        case '*': return frac(a.n * b.n, a.d * b.d);
-        case '/': return b.n === 0 ? null : frac(a.n * b.d, a.d * b.n);
-        default:  return null;
-      }
-    }
-
-    // ── RPN helpers ────────────────────────────────────────────────────────
-
-    const OPS = ['+', '-', '*', '/'];
-
-    function isOp(t) { return typeof t === 'string'; }
-
-    function isValidRPN(tokens) {
-      let depth = 0;
-      for (const t of tokens) {
-        if (isOp(t)) { if (depth < 2) return false; depth--; }
-        else depth++;
-      }
-      return depth === 1;
-    }
-
-    function evaluateRPN(tokens) {
-      const stack = [];
-      for (const t of tokens) {
-        if (isOp(t)) {
-          if (stack.length < 2) return null;
-          const right = stack.pop(), left = stack.pop();
-          const res = applyOp(t, left, right);
-          if (!res) return null;
-          stack.push(res);
-        } else {
-          stack.push(t);
-        }
-      }
-      return stack.length === 1 ? stack[0] : null;
-    }
-
-    function rpnToInfix(tokens) {
-      const stack = [];
-      for (const t of tokens) {
-        if (isOp(t)) {
-          const right = stack.pop(), left = stack.pop();
-          stack.push(`(${left} ${t} ${right})`);
-        } else {
-          stack.push(t.d === 1 ? String(t.n) : `${t.n}/${t.d}`);
-        }
-      }
-      return stack[0];
-    }
-
-    // Minimal-parens infix for display — only parenthesizes where operator
-    // precedence actually requires it.
-    function toDisplayInfix(tokens) {
-      const PREC = { '+': 1, '-': 1, '*': 2, '/': 2 };
-      const stack = []; // [{ str, op }]
-      for (const t of tokens) {
-        if (isOp(t)) {
-          const right = stack.pop(), left = stack.pop();
-          const p = PREC[t];
-          const leftStr  = (left.op  !== null && PREC[left.op]  < p) ? `(${left.str})`  : left.str;
-          const rightStr = (right.op !== null && ((t === '-' || t === '/') ? PREC[right.op] <= p : PREC[right.op] < p))
-            ? `(${right.str})` : right.str;
-          const opStr = t === '-' ? '−' : t;
-          stack.push({ str: `${leftStr} ${opStr} ${rightStr}`, op: t });
-        } else {
-          if (t.n < 0) {
-            const abs = t.d === 1 ? String(-t.n) : `${-t.n}/${t.d}`;
-            stack.push({ str: `(−${abs})`, op: null });
-          } else {
-            stack.push({ str: t.d === 1 ? String(t.n) : `${t.n}/${t.d}`, op: null });
+    <script src="solver.js"></script>
+    <script>
+      function getInputs() {
+        return ["n1", "n2", "n3", "n4"].map((id) => {
+          const el = document.getElementById(id);
+          el.classList.remove("invalid");
+          const f = parseInput(el.value);
+          if (f === null) {
+            el.classList.add("invalid");
+            return null;
           }
-        }
-      }
-      return stack[0].str;
-    }
-
-    // ── Combinatorics ──────────────────────────────────────────────────────
-
-    function* permutations(arr) {
-      if (arr.length <= 1) { yield arr.slice(); return; }
-      for (let i = 0; i < arr.length; i++) {
-        const rest = arr.filter((_, j) => j !== i);
-        for (const p of permutations(rest)) yield [arr[i], ...p];
-      }
-    }
-
-    function* opTriples() {
-      for (const a of OPS) for (const b of OPS) for (const c of OPS) yield [a, b, c];
-    }
-
-    // ── Expression tree ────────────────────────────────────────────────────
-
-    function tokensToTree(tokens) {
-      const stack = [];
-      for (const t of tokens) {
-        if (isOp(t)) {
-          const right = stack.pop(), left = stack.pop();
-          stack.push({ isLeaf: false, op: t, left, right });
-        } else {
-          stack.push({ isLeaf: true, value: t });
-        }
-      }
-      return stack[0];
-    }
-
-    // ── Canonicalization ───────────────────────────────────────────────────
-    //
-    // Two levels, mirroring solver24/solver.py:
-    //
-    //  canonicalSymbolic(tree)
-    //    → groups expressions equivalent under commutativity + associativity.
-    //    Key format: [sign, keyNode] where keyNode is one of:
-    //      ['val', n, d]
-    //      ['add', [[keyNode, coeff], ...]]      (sorted, nonzero coeffs)
-    //      ['mul', [[keyNode, exp], ...],         (numerator factors, sorted)
-    //               [[keyNode, exp], ...]]        (denominator factors, sorted)
-    //
-    //  symbolicKeyToIdentityKey(symKey)
-    //    → further groups symbolic keys that differ only by additive/
-    //      multiplicative identities (x+0, x*1, etc.).
-
-    function keyStr(k) { return JSON.stringify(k); }
-
-    // Integer sign power: base ∈ {-1,1}, exp is a positive integer
-    function intPow(base, exp) {
-      return (base === 1 || exp % 2 === 0) ? 1 : -1;
-    }
-
-    function flattenAdd(node, sign, out) {
-      if (node.isLeaf || (node.op !== '+' && node.op !== '-')) {
-        out.push([sign, node]); return;
-      }
-      flattenAdd(node.left, sign, out);
-      flattenAdd(node.right, node.op === '+' ? sign : -sign, out);
-    }
-
-    function flattenMul(node, exp, out) {
-      if (node.isLeaf || (node.op !== '*' && node.op !== '/')) {
-        out.push([exp, node]); return;
-      }
-      flattenMul(node.left, exp, out);
-      flattenMul(node.right, node.op === '*' ? exp : -exp, out);
-    }
-
-    function canonicalSymbolic(node) {
-      if (node.isLeaf) {
-        const { n, d } = node.value;
-        return [n < 0 ? -1 : 1, ['val', Math.abs(n), d]];
+          el.value = fracToString(f);
+          return f;
+        });
       }
 
-      if (node.op === '+' || node.op === '-') {
-        const terms = [];
-        flattenAdd(node, 1, terms);
+      function renderResults(groups) {
+        const section = document.getElementById("results-section");
+        const meta = document.getElementById("results-meta");
+        const body = document.getElementById("results-body");
 
-        const cm = new Map(); // keyStr → [key, coeff]
-        for (const [ts, child] of terms) {
-          const [cs, ck] = canonicalSymbolic(child);
-          const ks = keyStr(ck);
-          if (cm.has(ks)) cm.get(ks)[1] += ts * cs;
-          else cm.set(ks, [ck, ts * cs]);
+        section.classList.remove("hidden");
+        body.innerHTML = "";
+
+        const total = groups.reduce((s, g) => s + g.total, 0);
+
+        if (total === 0) {
+          meta.textContent = "";
+          body.innerHTML =
+            '<p class="no-solution">No solution exists for these numbers.</p>';
+          return;
         }
 
-        let items = [...cm.values()].filter(([, c]) => c !== 0);
-        if (!items.length) return [1, ['val', 0, 1]];
+        const nIdeas = groups.length;
+        meta.textContent = `${total} expression${total === 1 ? "" : "s"} · ${nIdeas} distinct idea${nIdeas === 1 ? "" : "s"}`;
 
-        items.sort((a, b) => keyStr(a[0]).localeCompare(keyStr(b[0])));
-        let sign = 1;
-        if (items[0][1] < 0) { items = items.map(([k, c]) => [k, -c]); sign = -1; }
+        const autoOpen = total <= 30;
 
-        return [sign, ['add', items]];
-      }
+        for (const group of groups) {
+          const firstExpr = group.subgroups[0].infixes[0];
+          const details = document.createElement("details");
+          details.className = "idea";
+          if (autoOpen) details.open = true;
 
-      if (node.op === '*' || node.op === '/') {
-        const factors = [];
-        flattenMul(node, 1, factors);
+          const summary = document.createElement("summary");
+          const countLabel =
+            group.total === 1
+              ? "1 expression"
+              : `${group.total} expressions · ${group.subgroups.length} subgroup${group.subgroups.length === 1 ? "" : "s"}`;
+          const arrow = document.createElement("span");
+          arrow.className = "arrow";
+          arrow.textContent = "▶";
+          const summaryBody = document.createElement("span");
+          summaryBody.className = "summary-body";
+          const codeEl = document.createElement("code");
+          codeEl.textContent = firstExpr;
+          const ideaCount = document.createElement("span");
+          ideaCount.className = "idea-count";
+          ideaCount.textContent = countLabel;
+          summaryBody.append(codeEl, ideaCount);
+          summary.append(arrow, summaryBody);
+          details.appendChild(summary);
 
-        const em = new Map(); // keyStr → [key, exp]
-        let sign = 1;
-        for (const [power, child] of factors) {
-          const [cs, ck] = canonicalSymbolic(child);
-          sign *= cs; // abs(power)=1 always for flattened factors
-          const ks = keyStr(ck);
-          if (em.has(ks)) em.get(ks)[1] += power;
-          else em.set(ks, [ck, power]);
-        }
+          const ideaBody = document.createElement("div");
+          ideaBody.className = "idea-body";
 
-        const num = [], den = [];
-        for (const [k, e] of em.values()) {
-          if (e > 0) num.push([k, e]);
-          else if (e < 0) den.push([k, -e]);
-        }
-        num.sort((a, b) => keyStr(a[0]).localeCompare(keyStr(b[0])));
-        den.sort((a, b) => keyStr(a[0]).localeCompare(keyStr(b[0])));
+          for (let i = 0; i < group.subgroups.length; i++) {
+            const sg = group.subgroups[i];
 
-        if (!num.length && !den.length) return [sign, ['val', 1, 1]];
-        return [sign, ['mul', num, den]];
-      }
-    }
-
-    function symbolicKeyToIdentityKey([overallSign, key]) {
-      // Compute numeric value of an identity key node (null if non-numeric)
-      function valueOf(node) {
-        if (!node) return null;
-        if (node[0] === 'val') return { n: node[1], d: node[2] };
-        if (node[0] === 'add') {
-          let rn = 0, rd = 1;
-          for (const [sub, mult] of node[1]) {
-            const v = valueOf(sub); if (!v) return null;
-            rn = rn * v.d + mult * v.n * rd;
-            rd = rd * v.d;
-            const g = gcd(Math.abs(rn), rd); rn /= g; rd /= g;
-          }
-          if (rd < 0) { rn = -rn; rd = -rd; }
-          return { n: rn, d: rd };
-        }
-        if (node[0] === 'mul') {
-          const [numT, denT] = [node[1] || [], node[2] || []];
-          let rn = 1, rd = 1;
-          for (const [sub, exp] of numT) {
-            const v = valueOf(sub); if (!v) return null;
-            if (v.n === 0) return { n: 0, d: 1 };
-            rn *= Math.pow(v.n, exp); rd *= Math.pow(v.d, exp);
-          }
-          for (const [sub, exp] of denT) {
-            const v = valueOf(sub); if (!v || v.n === 0) return null;
-            rn *= Math.pow(v.d, exp); rd *= Math.pow(v.n, exp);
-          }
-          if (rd < 0) { rn = -rn; rd = -rd; }
-          const g = gcd(Math.abs(rn), Math.abs(rd));
-          return { n: rn / g, d: rd / g };
-        }
-        return null;
-      }
-
-      function feq(v, n, d) { return v && v.n === n && v.d === d; }
-
-      // Returns [sign, simplifiedNode] stripping identities
-      function simplify(node) {
-        if (!node) return [1, null];
-        if (node[0] === 'val') return [1, node];
-
-        if (node[0] === 'add') {
-          const cm = new Map();
-          for (const [term, mult] of node[1]) {
-            const [cs, s] = simplify(term);
-            if (!s) continue;
-            const coeff = mult * cs;
-            const sv = valueOf(s);
-            if (feq(sv, 0, 1)) continue;
-            const ks = keyStr(s);
-            if (cm.has(ks)) cm.get(ks)[1] += coeff;
-            else cm.set(ks, [s, coeff]);
-          }
-          let items = [...cm.values()].filter(([, c]) => c !== 0);
-          if (!items.length) return [1, ['val', 0, 1]];
-          items.sort((a, b) => keyStr(a[0]).localeCompare(keyStr(b[0])));
-          let sign = 1;
-          if (items[0][1] < 0) { items = items.map(([k, c]) => [k, -c]); sign = -1; }
-          if (items.length === 1 && items[0][1] === 1) return [sign, items[0][0]];
-          return [sign, ['add', items]];
-        }
-
-        if (node[0] === 'mul') {
-          const [numT, denT] = [node[1] || [], node[2] || []];
-          let sign = 1;
-          const em = new Map();
-          let zero = false;
-
-          function handle(termList, dir) {
-            for (const [child, power] of termList) {
-              const [cs, s] = simplify(child);
-              if (!s) continue;
-              sign *= intPow(cs, power);
-              const sv = valueOf(s);
-              if (sv !== null) {
-                if (feq(sv, 0, 1)) { zero = true; return; }
-                if (feq(sv, 1, 1)) continue;
-                if (feq(sv, -1, 1)) { sign *= intPow(-1, power); continue; }
+            if (group.subgroups.length === 1) {
+              const ul = document.createElement("ul");
+              ul.className = "expr-list";
+              for (const expr of sg.infixes) {
+                const li = document.createElement("li");
+                li.textContent = expr;
+                ul.appendChild(li);
               }
-              const exp = dir * power;
-              const ks = keyStr(s);
-              if (em.has(ks)) em.get(ks)[1] += exp;
-              else em.set(ks, [s, exp]);
+              ideaBody.appendChild(ul);
+            } else {
+              const sgDetails = document.createElement("details");
+              sgDetails.className = "subgroup";
+              if (autoOpen) sgDetails.open = true;
+
+              const sgSummary = document.createElement("summary");
+              const sgArrow = document.createElement("span");
+              sgArrow.className = "arrow";
+              sgArrow.textContent = "▶";
+              const sgBody = document.createElement("span");
+              sgBody.className = "summary-body";
+              const sgCode = document.createElement("code");
+              sgCode.style.wordBreak = "break-word";
+              sgCode.textContent = sg.infixes[0];
+              const sgCount = document.createElement("span");
+              sgCount.className = "idea-count";
+              sgCount.textContent = `${sg.infixes.length} expression${sg.infixes.length === 1 ? "" : "s"}`;
+              sgBody.append(sgCode, sgCount);
+              sgSummary.append(sgArrow, sgBody);
+              sgDetails.appendChild(sgSummary);
+
+              const ul = document.createElement("ul");
+              ul.className = "expr-list sg-list";
+              for (const expr of sg.infixes) {
+                const li = document.createElement("li");
+                li.textContent = expr;
+                ul.appendChild(li);
+              }
+              sgDetails.appendChild(ul);
+              ideaBody.appendChild(sgDetails);
             }
           }
 
-          handle(numT, 1);  if (zero) return [1, ['val', 0, 1]];
-          handle(denT, -1); if (zero) return [1, ['val', 0, 1]];
-
-          const num = [], den = [];
-          for (const [k, e] of em.values()) {
-            if (e > 0) num.push([k, e]);
-            else if (e < 0) den.push([k, -e]);
-          }
-          num.sort((a, b) => keyStr(a[0]).localeCompare(keyStr(b[0])));
-          den.sort((a, b) => keyStr(a[0]).localeCompare(keyStr(b[0])));
-
-          if (!num.length && !den.length) return [sign, ['val', 1, 1]];
-          if (!den.length && num.length === 1 && num[0][1] === 1) return [sign, num[0][0]];
-          if (!num.length && den.length === 1 && den[0][1] === 1) return [sign, ['mul', [], den]];
-          return [sign, ['mul', num, den]];
+          details.appendChild(ideaBody);
+          body.appendChild(details);
         }
       }
 
-      const [exprSign, simplified] = simplify(key);
-      const final = simplified || ['val', 0, 1];
-      if (keyStr(final) === keyStr(['val', 0, 1])) return [1, final];
-      return [overallSign * exprSign < 0 ? -1 : 1, final];
-    }
-
-    // ── Grouped solver ─────────────────────────────────────────────────────
-    //
-    // Returns an array of identity groups, each:
-    //   { total: number, subgroups: [{ infixes: string[] }] }
-    //
-    // Identity group = Part 1 equivalences (commut. + assoc. + identities)
-    // Subgroup       = Part 2 equivalences (commut. + assoc. only)
-
-    function solveGrouped(numbers) {
-      const nums = numbers;
-
-      // Collect unique solutions: infix string → token array
-      const unique = new Map();
-      for (const ops of opTriples()) {
-        const combined = [...nums, ...ops];
-        for (const perm of permutations(combined)) {
-          if (!isValidRPN(perm)) continue;
-          const result = evaluateRPN(perm);
-          if (!result || result.n !== 24 || result.d !== 1) continue;
-          const infix = rpnToInfix(perm);
-          if (!unique.has(infix)) unique.set(infix, perm);
-        }
-      }
-
-      // Group by symbolic key — store token arrays, not strings
-      const symGroups = new Map(); // symKeyStr → { key, tokensList[] }
-      for (const [, tokens] of unique) {
-        const symKey = canonicalSymbolic(tokensToTree(tokens));
-        const ks = keyStr(symKey);
-        if (!symGroups.has(ks)) symGroups.set(ks, { key: symKey, tokensList: [] });
-        symGroups.get(ks).tokensList.push(tokens);
-      }
-
-      // Group by identity key
-      const idGroups = new Map(); // idKeyStr → subgroup[]
-      for (const { key, tokensList } of symGroups.values()) {
-        const idKey = symbolicKeyToIdentityKey(key);
-        const iks = keyStr(idKey);
-        if (!idGroups.has(iks)) idGroups.set(iks, []);
-        idGroups.get(iks).push({ tokensList });
-      }
-
-      // Convert to display strings (minimal parens) only at the end
-      return [...idGroups.values()].map(subgroups => {
-        const sgs = subgroups.map(sg => ({
-          infixes: [...new Set(sg.tokensList.map(t => toDisplayInfix(t)))].sort(),
-        }));
-        return { total: sgs.reduce((s, sg) => s + sg.infixes.length, 0), subgroups: sgs };
+      document.getElementById("btn-solve").addEventListener("click", () => {
+        const vals = getInputs();
+        if (vals.some((v) => v === null)) return;
+        renderResults(solveGrouped(vals));
       });
-    }
 
-    // ── UI ─────────────────────────────────────────────────────────────────
-
-    // Parse a decimal string, integer, or fraction (x/y) into an exact fraction.
-    function parseInput(str) {
-      str = str.trim();
-      if (!str) return null;
-
-      // Fraction form: x/y
-      if (str.includes('/')) {
-        const parts = str.split('/');
-        if (parts.length !== 2) return null;
-        const num = parts[0].trim(), den = parts[1].trim();
-        if (!/^-?\d+$/.test(num) || !/^-?\d+$/.test(den)) return null;
-        const pn = parseInt(num, 10), pd = parseInt(den, 10);
-        if (Math.abs(pn) > 1e9 || Math.abs(pd) > 1e9) return null;
-        return frac(pn, pd);
-      }
-
-      // Decimal / integer form
-      if (str === '-' || str === '.') return null;
-      if (!/^-?\d*\.?\d*$/.test(str)) return null;
-      const neg = str.startsWith('-');
-      const abs = neg ? str.slice(1) : str;
-      if (!abs || abs === '.') return null;
-      const dotIdx = abs.indexOf('.');
-      if (dotIdx === -1) {
-        const n = parseInt(abs, 10);
-        if (isNaN(n) || n > 1e9) return null;
-        return frac(neg ? -n : n, 1);
-      }
-      const intPart = dotIdx === 0 ? 0 : parseInt(abs.slice(0, dotIdx), 10);
-      const decStr = abs.slice(dotIdx + 1);
-      if (decStr.length > 8) return null;
-      const d = Math.pow(10, decStr.length || 1);
-      const decVal = decStr ? parseInt(decStr, 10) : 0;
-      const n = intPart * d + decVal;
-      if (Math.abs(n) > 1e9) return null;
-      return frac(neg ? -n : n, d);
-    }
-
-    function fracToString(f) {
-      return f.d === 1 ? String(f.n) : `${f.n}/${f.d}`;
-    }
-
-    function getInputs() {
-      return ['n1', 'n2', 'n3', 'n4'].map(id => {
-        const el = document.getElementById(id);
-        el.classList.remove('invalid');
-        const f = parseInput(el.value);
-        if (f === null) { el.classList.add('invalid'); return null; }
-        el.value = fracToString(f);
-        return f;
+      document.querySelectorAll(".num-input").forEach((input) => {
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") document.getElementById("btn-solve").click();
+        });
       });
-    }
-
-    function renderResults(groups) {
-      const section = document.getElementById('results-section');
-      const meta    = document.getElementById('results-meta');
-      const body    = document.getElementById('results-body');
-
-      section.classList.remove('hidden');
-      body.innerHTML = '';
-
-      const total = groups.reduce((s, g) => s + g.total, 0);
-
-      if (total === 0) {
-        meta.textContent = '';
-        body.innerHTML = '<p class="no-solution">No solution exists for these numbers.</p>';
-        return;
-      }
-
-      const nIdeas = groups.length;
-      meta.textContent =
-        `${total} expression${total === 1 ? '' : 's'} · ${nIdeas} distinct idea${nIdeas === 1 ? '' : 's'}`;
-
-      // Auto-expand when small enough to read at a glance
-      const autoOpen = total <= 30;
-
-      for (const group of groups) {
-        const firstExpr = group.subgroups[0].infixes[0];
-        const details = document.createElement('details');
-        details.className = 'idea';
-        if (autoOpen) details.open = true;
-
-        const summary = document.createElement('summary');
-        const countLabel = group.total === 1
-          ? '1 expression'
-          : `${group.total} expressions · ${group.subgroups.length} subgroup${group.subgroups.length === 1 ? '' : 's'}`;
-        const arrow = document.createElement('span');
-        arrow.className = 'arrow';
-        arrow.textContent = '▶';
-        const summaryBody = document.createElement('span');
-        summaryBody.className = 'summary-body';
-        const codeEl = document.createElement('code');
-        codeEl.textContent = firstExpr;
-        const ideaCount = document.createElement('span');
-        ideaCount.className = 'idea-count';
-        ideaCount.textContent = countLabel;
-        summaryBody.append(codeEl, ideaCount);
-        summary.append(arrow, summaryBody);
-        details.appendChild(summary);
-
-        const ideaBody = document.createElement('div');
-        ideaBody.className = 'idea-body';
-
-        for (let i = 0; i < group.subgroups.length; i++) {
-          const sg = group.subgroups[i];
-
-          if (group.subgroups.length === 1) {
-            // Single subgroup — list directly, no toggle needed
-            const ul = document.createElement('ul');
-            ul.className = 'expr-list';
-            for (const expr of sg.infixes) {
-              const li = document.createElement('li');
-              li.textContent = expr;
-              ul.appendChild(li);
-            }
-            ideaBody.appendChild(ul);
-          } else {
-            // Multiple subgroups — each gets its own collapsible
-            const sgDetails = document.createElement('details');
-            sgDetails.className = 'subgroup';
-            if (autoOpen) sgDetails.open = true;
-
-            const sgSummary = document.createElement('summary');
-            const sgArrow = document.createElement('span');
-            sgArrow.className = 'arrow';
-            sgArrow.textContent = '▶';
-            const sgBody = document.createElement('span');
-            sgBody.className = 'summary-body';
-            const sgCode = document.createElement('code');
-            sgCode.style.wordBreak = 'break-word';
-            sgCode.textContent = sg.infixes[0];
-            const sgCount = document.createElement('span');
-            sgCount.className = 'idea-count';
-            sgCount.textContent = `${sg.infixes.length} expression${sg.infixes.length === 1 ? '' : 's'}`;
-            sgBody.append(sgCode, sgCount);
-            sgSummary.append(sgArrow, sgBody);
-            sgDetails.appendChild(sgSummary);
-
-            const ul = document.createElement('ul');
-            ul.className = 'expr-list sg-list';
-            for (const expr of sg.infixes) {
-              const li = document.createElement('li');
-              li.textContent = expr;
-              ul.appendChild(li);
-            }
-            sgDetails.appendChild(ul);
-            ideaBody.appendChild(sgDetails);
-          }
-        }
-
-        details.appendChild(ideaBody);
-        body.appendChild(details);
-      }
-    }
-
-    document.getElementById('btn-solve').addEventListener('click', () => {
-      const vals = getInputs();
-      if (vals.some(v => v === null)) return;
-      renderResults(solveGrouped(vals));
-    });
-
-    document.querySelectorAll('.num-input').forEach(input => {
-      input.addEventListener('keydown', e => {
-        if (e.key === 'Enter') document.getElementById('btn-solve').click();
-      });
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
