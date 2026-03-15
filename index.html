@@ -407,6 +407,26 @@
       return stack[0];
     }
 
+    // Minimal-parens infix for display — only parenthesizes where operator
+    // precedence actually requires it.
+    function toDisplayInfix(tokens) {
+      const PREC = { '+': 1, '-': 1, '*': 2, '/': 2 };
+      const stack = []; // [{ str, op }]
+      for (const t of tokens) {
+        if (isOp(t)) {
+          const right = stack.pop(), left = stack.pop();
+          const p = PREC[t];
+          const leftStr  = (left.op  !== null && PREC[left.op]  < p) ? `(${left.str})`  : left.str;
+          const rightStr = (right.op !== null && ((t === '-' || t === '/') ? PREC[right.op] <= p : PREC[right.op] < p))
+            ? `(${right.str})` : right.str;
+          stack.push({ str: `${leftStr} ${t} ${rightStr}`, op: t });
+        } else {
+          stack.push({ str: t.d === 1 ? String(t.n) : `${t.n}/${t.d}`, op: null });
+        }
+      }
+      return stack[0].str;
+    }
+
     // ── Combinatorics ──────────────────────────────────────────────────────
 
     function* permutations(arr) {
@@ -665,28 +685,31 @@
         }
       }
 
-      // Group by symbolic key
-      const symGroups = new Map(); // symKeyStr → { key, infixes[] }
-      for (const [infix, tokens] of unique) {
+      // Group by symbolic key — store token arrays, not strings
+      const symGroups = new Map(); // symKeyStr → { key, tokensList[] }
+      for (const [, tokens] of unique) {
         const symKey = canonicalSymbolic(tokensToTree(tokens));
         const ks = keyStr(symKey);
-        if (!symGroups.has(ks)) symGroups.set(ks, { key: symKey, infixes: [] });
-        symGroups.get(ks).infixes.push(infix);
+        if (!symGroups.has(ks)) symGroups.set(ks, { key: symKey, tokensList: [] });
+        symGroups.get(ks).tokensList.push(tokens);
       }
 
       // Group by identity key
       const idGroups = new Map(); // idKeyStr → subgroup[]
-      for (const { key, infixes } of symGroups.values()) {
+      for (const { key, tokensList } of symGroups.values()) {
         const idKey = symbolicKeyToIdentityKey(key);
         const iks = keyStr(idKey);
         if (!idGroups.has(iks)) idGroups.set(iks, []);
-        idGroups.get(iks).push({ infixes: infixes.sort() });
+        idGroups.get(iks).push({ tokensList });
       }
 
-      return [...idGroups.values()].map(subgroups => ({
-        total: subgroups.reduce((s, sg) => s + sg.infixes.length, 0),
-        subgroups,
-      }));
+      // Convert to display strings (minimal parens) only at the end
+      return [...idGroups.values()].map(subgroups => {
+        const sgs = subgroups.map(sg => ({
+          infixes: [...new Set(sg.tokensList.map(t => toDisplayInfix(t)))].sort(),
+        }));
+        return { total: sgs.reduce((s, sg) => s + sg.infixes.length, 0), subgroups: sgs };
+      });
     }
 
     // ── UI ─────────────────────────────────────────────────────────────────
