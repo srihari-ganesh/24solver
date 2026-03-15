@@ -182,6 +182,29 @@
         background: #e4e8ff;
       }
 
+      .clear-row {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 0.5rem;
+      }
+
+      .btn-clear {
+        padding: 0.3rem 0.75rem;
+        font-size: 0.82rem;
+        font-weight: 600;
+        background: none;
+        color: #aaa;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: color 0.15s, border-color 0.15s;
+      }
+
+      .btn-clear:hover {
+        color: #e05252;
+        border-color: #e05252;
+      }
+
       @media (max-width: 400px) {
         .options-row {
           flex-wrap: wrap;
@@ -256,6 +279,9 @@
         </div>
 
         <button class="btn-solve" id="btn-solve">Solve</button>
+        <div class="clear-row">
+          <button class="btn-clear" id="btn-clear" type="button">Clear</button>
+        </div>
       </div>
 
       <div class="results-card hidden" id="results-section">
@@ -421,7 +447,7 @@
 
         const INITIAL_SHOW = 10;
 
-        function renderGroup(group) {
+        function renderGroup(group, target = body) {
           const firstExpr = group.subgroups[0].infixes[0];
           const details = document.createElement("details");
           details.className = "idea";
@@ -524,24 +550,34 @@
           }
 
           details.appendChild(ideaBody);
-          body.appendChild(details);
+          target.appendChild(details);
         }
 
         if (mode === "closest" && groups.length > INITIAL_SHOW) {
           const visible = groups.slice(0, INITIAL_SHOW);
           const hidden = groups.slice(INITIAL_SHOW);
-          visible.forEach(renderGroup);
+          visible.forEach((g) => renderGroup(g));
 
           const btn = document.createElement("button");
           btn.className = "btn-show-more";
           btn.textContent = `Show ${hidden.length} more ideas`;
-          btn.addEventListener("click", () => {
-            btn.remove();
-            hidden.forEach(renderGroup);
-          });
           body.appendChild(btn);
+
+          const extraContainer = document.createElement("div");
+          extraContainer.style.display = "none";
+          hidden.forEach((g) => renderGroup(g, extraContainer));
+          body.appendChild(extraContainer);
+
+          let expanded = false;
+          btn.addEventListener("click", () => {
+            expanded = !expanded;
+            extraContainer.style.display = expanded ? "" : "none";
+            btn.textContent = expanded
+              ? "Show less"
+              : `Show ${hidden.length} more ideas`;
+          });
         } else {
-          groups.forEach(renderGroup);
+          groups.forEach((g) => renderGroup(g));
         }
       }
 
@@ -577,6 +613,32 @@
 
       document.getElementById("target").addEventListener("input", () => {
         document.getElementById("btn-pi").classList.remove("active");
+      });
+
+      document.getElementById("btn-clear").addEventListener("click", () => {
+        ["n1", "n2", "n3", "n4"].forEach((id) => {
+          const el = document.getElementById(id);
+          el.value = "";
+          el.classList.remove("invalid");
+        });
+        const targetEl = document.getElementById("target");
+        targetEl.value = "";
+        targetEl.classList.remove("invalid");
+        document.getElementById("btn-pi").classList.remove("active");
+
+        const section = document.getElementById("results-section");
+        section.classList.add("hidden");
+        document.getElementById("results-body").innerHTML = "";
+        document.getElementById("results-meta").textContent = "";
+
+        document.getElementById("btn-exact").classList.add("active");
+        document.getElementById("btn-closest").classList.remove("active");
+        currentMode = "exact";
+        document.getElementById("btn-all").classList.add("active");
+        document.getElementById("btn-any").classList.remove("active");
+        currentNumMode = "all";
+
+        document.getElementById("n1").focus();
       });
 
       document

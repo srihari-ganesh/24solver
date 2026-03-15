@@ -414,10 +414,11 @@ function symbolicKeyToIdentityKey([overallSign, key]) {
 //   { value: {n,d}, valueFlt: number, distance: number }
 // Groups are sorted by distance ascending.
 
-function solveGrouped(numbers, targetFrac, mode, numMode) {
+function solveGrouped(numbers, targetFrac, mode, numMode, infixFn) {
   if (!targetFrac) targetFrac = { n: 24, d: 1 };
   if (!mode) mode = "exact";
   if (!numMode) numMode = "all";
+  if (!infixFn) infixFn = toDisplayInfix;
 
   const targetFlt = targetFrac.n / targetFrac.d;
   const sizes =
@@ -468,7 +469,7 @@ function solveGrouped(numbers, targetFrac, mode, numMode) {
   // Convert to display format
   const groups = [...idGroups.values()].map((subgroupList) => {
     const subgroups = subgroupList.map((sg) => ({
-      infixes: [...new Set(sg.tokensList.map((t) => toDisplayInfix(t)))].sort(),
+      infixes: [...new Set(sg.tokensList.map((t) => infixFn(t)))].sort(),
     }));
     const group = {
       total: subgroups.reduce((s, sg) => s + sg.infixes.length, 0),
@@ -540,4 +541,8 @@ function parseInput(str) {
 
 function fracToString(f) {
   return f.d === 1 ? String(f.n) : `${f.n}/${f.d}`;
+}
+
+if (typeof module !== "undefined") {
+  module.exports = { solveGrouped, rpnToInfix, frac, parseInput, fracToString };
 }
