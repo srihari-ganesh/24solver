@@ -35,6 +35,64 @@
         padding: 0.1rem 0.3rem;
         border-radius: 3px;
       }
+
+      .mode-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+      .mode-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        flex-shrink: 0;
+      }
+      .mode-toggle {
+        display: flex;
+        gap: 0.2rem;
+        background: #f0f0f0;
+        border-radius: 20px;
+        padding: 0.2rem;
+      }
+      .mode-opt input {
+        display: none;
+      }
+      .mode-opt span {
+        display: block;
+        padding: 0.3rem 0.75rem;
+        border-radius: 16px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #888;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+        user-select: none;
+        white-space: nowrap;
+      }
+      .mode-opt input:checked + span {
+        background: #4a6cf7;
+        color: #fff;
+      }
+
+      .existence-result {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        padding: 1rem 0;
+      }
+      .existence-result.yes { color: #2d8a4e; }
+      .existence-result.no  { color: #e05252; }
+
+      .num-ideas-result {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #4a6cf7;
+        padding: 1rem 0;
+      }
     </style>
   </head>
   <body>
@@ -87,6 +145,23 @@
               pattern="-?[0-9]*\.?[0-9]*"
               placeholder="?"
             />
+          </div>
+        </div>
+        <div class="mode-row">
+          <span class="mode-label">Mode</span>
+          <div class="mode-toggle">
+            <label class="mode-opt">
+              <input type="radio" name="mode" value="solutions" checked />
+              <span>Solutions</span>
+            </label>
+            <label class="mode-opt">
+              <input type="radio" name="mode" value="existence" />
+              <span>Existence</span>
+            </label>
+            <label class="mode-opt">
+              <input type="radio" name="mode" value="num-ideas" />
+              <span># Ideas</span>
+            </label>
           </div>
         </div>
         <button class="btn-solve" id="btn-solve">Solve</button>
@@ -199,24 +274,48 @@
         });
       }
 
+      function getMode() {
+        return document.querySelector('input[name="mode"]:checked').value;
+      }
+
       function renderResults(groups) {
+        const mode = getMode();
         const section = document.getElementById("results-section");
         const meta = document.getElementById("results-meta");
         const body = document.getElementById("results-body");
+        const title = document.querySelector(".results-title");
 
         section.classList.remove("hidden");
         body.innerHTML = "";
+        meta.textContent = "";
 
         const total = groups.reduce((s, g) => s + g.total, 0);
+        const nIdeas = groups.length;
+
+        if (mode === "existence") {
+          title.textContent = "Solvable?";
+          if (total === 0) {
+            body.innerHTML = '<p class="existence-result no">No</p>';
+          } else {
+            body.innerHTML = '<p class="existence-result yes">Yes</p>';
+          }
+          return;
+        }
+
+        if (mode === "num-ideas") {
+          title.textContent = "Distinct Ideas";
+          body.innerHTML = `<p class="num-ideas-result">${nIdeas}</p>`;
+          return;
+        }
+
+        title.textContent = "Solutions";
 
         if (total === 0) {
-          meta.textContent = "";
           body.innerHTML =
             '<p class="no-solution">No solution exists for these numbers.</p>';
           return;
         }
 
-        const nIdeas = groups.length;
         meta.textContent = `${total} expression${total === 1 ? "" : "s"} · ${nIdeas} distinct idea${nIdeas === 1 ? "" : "s"}`;
 
         const autoOpen = total <= 30;
@@ -299,10 +398,19 @@
         }
       }
 
+      let lastGroups = null;
+
       document.getElementById("btn-solve").addEventListener("click", () => {
         const vals = getInputs();
         if (vals.some((v) => v === null)) return;
-        renderResults(solveGrouped(vals));
+        lastGroups = solveGrouped(vals);
+        renderResults(lastGroups);
+      });
+
+      document.querySelectorAll("input[name='mode']").forEach((radio) => {
+        radio.addEventListener("change", () => {
+          if (lastGroups !== null) renderResults(lastGroups);
+        });
       });
 
       document.querySelectorAll(".num-input").forEach((input) => {

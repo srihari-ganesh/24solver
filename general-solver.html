@@ -123,6 +123,23 @@
         color: #fff;
       }
 
+      .existence-result {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        padding: 1rem 0;
+      }
+      .existence-result.yes { color: #2d8a4e; }
+      .existence-result.no  { color: #e05252; }
+
+      .num-ideas-result {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #4a6cf7;
+        padding: 1rem 0;
+      }
+
       /* Exact hit highlighting in closest mode */
       details.idea.exact-hit > summary {
         background: #e6f4ea;
@@ -278,6 +295,14 @@
           </div>
         </div>
 
+        <div class="mode-wrap" id="display-mode-row" style="margin-bottom:1rem;">
+          <label>Display</label>
+          <div class="mode-toggle">
+            <button id="btn-disp-solutions" class="active" type="button">Solutions</button>
+            <button id="btn-disp-existence" type="button">Existence</button>
+            <button id="btn-disp-num-ideas" type="button"># Ideas</button>
+          </div>
+        </div>
         <button class="btn-solve" id="btn-solve">Solve</button>
         <div class="clear-row">
           <button class="btn-clear" id="btn-clear" type="button">Clear</button>
@@ -303,6 +328,9 @@
 
       let currentMode = "exact";
       let currentNumMode = "all";
+      let currentDisplayMode = "solutions";
+      let lastGroups = null;
+      let lastTargetFrac = null;
 
       function setMode(mode) {
         currentMode = mode;
@@ -312,12 +340,35 @@
         document
           .getElementById("btn-closest")
           .classList.toggle("active", mode === "closest");
+        const displayRow = document.getElementById("display-mode-row");
+        if (mode === "closest") {
+          displayRow.style.display = "none";
+          setDisplayMode("solutions", false);
+        } else {
+          displayRow.style.display = "";
+        }
         if (
           !document
             .getElementById("results-section")
             .classList.contains("hidden")
         ) {
           document.getElementById("btn-solve").click();
+        }
+      }
+
+      function setDisplayMode(mode, rerender = true) {
+        currentDisplayMode = mode;
+        document
+          .getElementById("btn-disp-solutions")
+          .classList.toggle("active", mode === "solutions");
+        document
+          .getElementById("btn-disp-existence")
+          .classList.toggle("active", mode === "existence");
+        document
+          .getElementById("btn-disp-num-ideas")
+          .classList.toggle("active", mode === "num-ideas");
+        if (rerender && lastGroups !== null) {
+          renderResults(lastGroups, lastTargetFrac, currentMode);
         }
       }
 
@@ -350,6 +401,15 @@
       document
         .getElementById("btn-any")
         .addEventListener("click", () => setNumMode("any"));
+      document
+        .getElementById("btn-disp-solutions")
+        .addEventListener("click", () => setDisplayMode("solutions"));
+      document
+        .getElementById("btn-disp-existence")
+        .addEventListener("click", () => setDisplayMode("existence"));
+      document
+        .getElementById("btn-disp-num-ideas")
+        .addEventListener("click", () => setDisplayMode("num-ideas"));
 
       // ── Input helpers ───────────────────────────────────────────────────────
 
@@ -418,24 +478,40 @@
         const section = document.getElementById("results-section");
         const meta = document.getElementById("results-meta");
         const body = document.getElementById("results-body");
+        const title = document.querySelector(".results-title");
 
         section.classList.remove("hidden");
         body.innerHTML = "";
+        meta.textContent = "";
 
         const total = groups.reduce((s, g) => s + g.total, 0);
         const nIdeas = groups.length;
         const targetStr = targetDisplayStr(targetFrac);
 
         if (mode === "exact") {
+          if (currentDisplayMode === "existence") {
+            title.textContent = "Solvable?";
+            body.innerHTML = total > 0
+              ? '<p class="existence-result yes">Yes</p>'
+              : '<p class="existence-result no">No</p>';
+            return;
+          }
+
+          if (currentDisplayMode === "num-ideas") {
+            title.textContent = "Distinct Ideas";
+            body.innerHTML = `<p class="num-ideas-result">${nIdeas}</p>`;
+            return;
+          }
+
+          title.textContent = "Solutions";
           if (total === 0) {
-            meta.textContent = "";
             body.innerHTML = `<p class="no-solution">No exact solution for target ${targetStr}.</p>`;
             return;
           }
           meta.textContent = `${total} expression${total === 1 ? "" : "s"} · ${nIdeas} distinct idea${nIdeas === 1 ? "" : "s"}`;
         } else {
+          title.textContent = "Solutions";
           if (total === 0) {
-            meta.textContent = "";
             body.innerHTML = `<p class="no-solution">No expressions possible for these numbers.</p>`;
             return;
           }
@@ -588,13 +664,9 @@
         if (vals.some((v) => v === null)) return;
         const targetFrac = getTargetInput();
         if (!targetFrac) return;
-        const groups = solveGrouped(
-          vals,
-          targetFrac,
-          currentMode,
-          currentNumMode,
-        );
-        renderResults(groups, targetFrac, currentMode);
+        lastGroups = solveGrouped(vals, targetFrac, currentMode, currentNumMode);
+        lastTargetFrac = targetFrac;
+        renderResults(lastGroups, lastTargetFrac, currentMode);
       });
 
       const PI_STR = "3.14159265";
@@ -637,6 +709,10 @@
         document.getElementById("btn-all").classList.add("active");
         document.getElementById("btn-any").classList.remove("active");
         currentNumMode = "all";
+        setDisplayMode("solutions", false);
+        document.getElementById("display-mode-row").style.display = "";
+        lastGroups = null;
+        lastTargetFrac = null;
 
         document.getElementById("n1").focus();
       });
